@@ -1,4 +1,4 @@
-package edu.njit.knime.adapter.qvx;
+package main.java.edu.njit.knime.adapter.qvx;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;

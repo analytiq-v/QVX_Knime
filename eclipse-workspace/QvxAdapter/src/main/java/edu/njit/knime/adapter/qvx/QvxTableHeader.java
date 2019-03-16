@@ -6,7 +6,7 @@
 //
 
 
-package edu.njit.knime.adapter.qvx;
+package main.java.edu.njit.knime.adapter.qvx;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

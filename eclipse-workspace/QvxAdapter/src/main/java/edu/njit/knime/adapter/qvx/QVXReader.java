@@ -1,4 +1,4 @@
-package edu.njit.knime.adapter.qvx;
+package main.java.edu.njit.knime.adapter.qvx;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -9,7 +9,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
-import edu.njit.knime.adapter.qvx.QvxTableHeader.Fields.QvxFieldHeader;
+import main.java.edu.njit.knime.adapter.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 
 public class QVXReader {
 	
