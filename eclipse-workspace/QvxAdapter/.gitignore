@@ -1,6 +1,5 @@
 /bin/
-/target/
+/target/classes/main/java/edu/njit/knime/adapter/qvx/QvxTableHeader$Fields$QvxFieldHeader.class
 .classpath
 .project
 .settings
-/target/classes/*
