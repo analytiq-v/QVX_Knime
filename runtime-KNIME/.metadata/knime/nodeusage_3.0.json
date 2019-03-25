@@ -4,17 +4,33 @@
     "created":"2019-03-24 19:48",
     "nodestats":{
         "nodes":[
+            {
+                "id":"edu.njit.reader.QvxReaderNodeFactory#QvxReader",
+                "nrexecs":0,
+                "nrfails":0,
+                "exectime":0,
+                "nrcreated":1,
+                "successor":"n/a"
+            },
+            {
+                "id":"edu.njit.writer.QvxWriterNodeFactory#QvxWriter",
+                "nrexecs":0,
+                "nrfails":0,
+                "exectime":0,
+                "nrcreated":1,
+                "successor":"n/a"
+            }
         ],
         "metaNodes":{
         },
         "wrappedNodes":{
         }
     },
-    "uptime":37,
-    "workflowsOpened":0,
+    "uptime":40622,
+    "workflowsOpened":1,
     "remoteWorkflowsOpened":0,
-    "launches":5,
-    "timeSinceLastStart":23,
+    "launches":9,
+    "timeSinceLastStart":76302,
     "crashes":0,
     "properlyShutDown":true
 }

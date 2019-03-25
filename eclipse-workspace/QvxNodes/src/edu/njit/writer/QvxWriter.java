@@ -1,4 +1,4 @@
-package main.java.edu.njit.knime.adapter.qvx;
+package edu.njit.writer;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -17,9 +17,14 @@ import javax.xml.bind.Marshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
-import main.java.edu.njit.knime.adapter.qvx.QvxTableHeader.Fields.QvxFieldHeader;
+import edu.njit.qvx.QvxFieldExtent;
+import edu.njit.qvx.QvxFieldType;
+import edu.njit.qvx.QvxNullRepresentation;
+import edu.njit.qvx.QvxTableHeader;
+import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
+import edu.njit.util.Util;
 
-public class QVXWriter {
+public class QvxWriter {
 	
 	private static String[][] data;
 	private static String qvxOutFileName;
@@ -283,32 +288,8 @@ public class QVXWriter {
 	}
 	
 	public static void main(String[] args) {
-		QvxTableHeader qvxTableHeader = new QvxTableHeader();
 		
-		QVXReader qvxReader = new QVXReader();
-		try {
-			 qvxTableHeader = qvxReader.process("qvx1.xml");
-		} catch (FileNotFoundException | JAXBException e) {
-			e.printStackTrace();
-		}
-		 
-		QVXWriter qvxWriter = new QVXWriter();
-		try {
-			qvxWriter.process(qvxTableHeader, "qvx3.xml");
-		} catch (FileNotFoundException | JAXBException e) {
-			e.printStackTrace();
-		}
-		
-		//read the file
-		try {
-			 qvxTableHeader = qvxReader.process("qvx3.xml");
-		} catch (FileNotFoundException | JAXBException e) {
-			e.printStackTrace();
-		}
-		 
-		 qvxReader.displayQvxData(qvxReader.extractQvxData(qvxTableHeader));
-		 
-		 //Test #2
+		 //Test #1
 		 QvxTableHeader tableHeader = defaultTableHeader();
 		 writeQvxFromCsv("products.csv", "products.qvx", tableHeader);
 	}

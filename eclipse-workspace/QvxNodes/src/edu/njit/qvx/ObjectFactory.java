@@ -6,7 +6,7 @@
 //
 
 
-package main.java.edu.njit.knime.adapter.qvx;
+package edu.njit.qvx;
 
 import javax.xml.bind.annotation.XmlRegistry;
 

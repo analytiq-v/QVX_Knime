@@ -6,43 +6,47 @@
 //
 
 
-package main.java.edu.njit.knime.adapter.qvx;
+package edu.njit.qvx;
 
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for QvxNullRepresentation.
+ * <p>Java class for QvxFieldType.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * <p>
  * <pre>
- * &lt;simpleType name="QvxNullRepresentation"&gt;
+ * &lt;simpleType name="QvxFieldType"&gt;
  *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;
- *     &lt;enumeration value="QVX_NULL_NEVER"/&gt;
- *     &lt;enumeration value="QVX_NULL_ZERO_LENGTH"/&gt;
- *     &lt;enumeration value="QVX_NULL_FLAG_WITH_UNDEFINED_DATA"/&gt;
- *     &lt;enumeration value="QVX_NULL_FLAG_SUPPRESS_DATA"/&gt;
+ *     &lt;enumeration value="QVX_SIGNED_INTEGER"/&gt;
+ *     &lt;enumeration value="QVX_UNSIGNED_INTEGER"/&gt;
+ *     &lt;enumeration value="QVX_IEEE_REAL"/&gt;
+ *     &lt;enumeration value="QVX_PACKED_BCD"/&gt;
+ *     &lt;enumeration value="QVX_BLOB"/&gt;
+ *     &lt;enumeration value="QVX_TEXT"/&gt;
  *   &lt;/restriction&gt;
  * &lt;/simpleType&gt;
  * </pre>
  * 
  */
-@XmlType(name = "QvxNullRepresentation")
+@XmlType(name = "QvxFieldType")
 @XmlEnum
-public enum QvxNullRepresentation {
+public enum QvxFieldType {
 
-    QVX_NULL_NEVER,
-    QVX_NULL_ZERO_LENGTH,
-    QVX_NULL_FLAG_WITH_UNDEFINED_DATA,
-    QVX_NULL_FLAG_SUPPRESS_DATA;
+    QVX_SIGNED_INTEGER,
+    QVX_UNSIGNED_INTEGER,
+    QVX_IEEE_REAL,
+    QVX_PACKED_BCD,
+    QVX_BLOB,
+    QVX_TEXT;
 
     public String value() {
         return name();
     }
 
-    public static QvxNullRepresentation fromValue(String v) {
+    public static QvxFieldType fromValue(String v) {
         return valueOf(v);
     }
 

@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.0"?>
-<plugin>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?eclipse version="3.0"?><plugin>
 
    <!-- This is an example for providing an own category 
       <extension
@@ -14,12 +13,10 @@
    </extension>
    -->
    
-   <extension
-         point="org.knime.workbench.repository.nodes">
-      <node
-            category-path="/"
-            factory-class="edu.njit.plugin.QvxPluginNodeFactory"
-            id="edu.njit.plugin.QvxPluginNodeFactory"/>
-   </extension>
+   <extension point="org.knime.workbench.repository.nodes">
+      <node category-path="/" factory-class="edu.njit.plugin.QvxPluginNodeFactory" id="edu.njit.plugin.QvxPluginNodeFactory"/>
+   <node category-path="/" factory-class="edu.njit.reader.QvxReaderNodeFactory" id="edu.njit.reader.QvxReaderNodeFactory"/>
+<node category-path="/" factory-class="edu.njit.writer.QvxWriterNodeFactory" id="edu.njit.writer.QvxWriterNodeFactory"/>
+</extension>
    
 </plugin>

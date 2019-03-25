@@ -6,7 +6,7 @@
 //
 
 
-package main.java.edu.njit.knime.adapter.qvx;
+package edu.njit.qvx;
 
 import java.math.BigInteger;
 import javax.xml.bind.annotation.XmlAccessType;

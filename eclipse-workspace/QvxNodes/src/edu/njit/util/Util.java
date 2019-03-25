@@ -1,4 +1,4 @@
-package main.java.edu.njit.knime.adapter.qvx;
+package edu.njit.util;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -8,14 +8,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Util {
-
-public static String[][] csvTo2DArray(String fileName) {
+	
+	public static final String PROJECT_DIR =
+			System.getProperty("java.class.path").split(".metadata")[0] + "QvxNodes\\";
+	public static String[][] csvTo2DArray(String fileName) {
 		
 		BufferedReader inFile = null;
 		try {
 			inFile = new BufferedReader(new FileReader(fileName));
 		}catch (FileNotFoundException e) {
-			e.printStackTrace();
+			try {
+				inFile = new BufferedReader(new FileReader(Util.PROJECT_DIR + fileName));
+			}catch(FileNotFoundException e2) {
+				e.printStackTrace();
+				e2.printStackTrace();
+			}
 		}
 		
 		List<String[]> rows = new ArrayList<String[]>();
