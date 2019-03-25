@@ -29,10 +29,10 @@ public class QvxWriterNodeDialog extends DefaultNodeSettingsPane {
     protected QvxWriterNodeDialog() {
         super();
         
-        /* Testing of the "QvxWriter" class
+        /* Testing of the "QvxWriter" class */
         QvxTableHeader tableHeader = QvxWriter.defaultTableHeader();
 		QvxWriter.writeQvxFromCsv("products.csv", Util.PROJECT_DIR + "products.qvx", tableHeader);
-		*/
+		
         addDialogComponent(new DialogComponentNumber(
                 new SettingsModelIntegerBounded(
                     QvxWriterNodeModel.CFGKEY_COUNT,
