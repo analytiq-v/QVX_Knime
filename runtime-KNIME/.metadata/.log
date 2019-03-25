@@ -1,0 +1,60 @@
+!SESSION 2019-03-24 19:44:36.696 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.8.0_172
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Framework arguments:  -application org.knime.product.KNIME_APPLICATION
+Command-line arguments:  -application org.knime.product.KNIME_APPLICATION -data C:\Users\Mehmet\Documents\GitHub\capstone-project\eclipse-workspace/../runtime-KNIME -dev file:C:/Users/Mehmet/Documents/GitHub/capstone-project/eclipse-workspace/.metadata/.plugins/org.eclipse.pde.core/KNIME Analytics Platform/dev.properties -os win32 -ws win32 -arch x86_64 -consoleLog
+
+!ENTRY org.eclipse.ui 2 0 2019-03-24 19:47:48.892
+!MESSAGE Warnings while parsing the key bindings from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.bindings' extension point
+!SUBENTRY 1 org.eclipse.ui 2 0 2019-03-24 19:47:48.893
+!MESSAGE Cannot bind to an undefined command: plug-in='org.knime.workbench.editor', id='knime.commands.editor.gridSettings'
+!SESSION 2019-03-24 19:48:54.744 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.8.0_172
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Framework arguments:  -application org.knime.product.KNIME_APPLICATION
+Command-line arguments:  -application org.knime.product.KNIME_APPLICATION -data C:\Users\Mehmet\Documents\GitHub\capstone-project\eclipse-workspace/../runtime-KNIME -dev file:C:/Users/Mehmet/Documents/GitHub/capstone-project/eclipse-workspace/.metadata/.plugins/org.eclipse.pde.core/KNIME Analytics Platform/dev.properties -os win32 -ws win32 -arch x86_64 -consoleLog
+
+!ENTRY org.eclipse.ui 2 0 2019-03-24 19:49:29.944
+!MESSAGE Warnings while parsing the key bindings from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.bindings' extension point
+!SUBENTRY 1 org.eclipse.ui 2 0 2019-03-24 19:49:29.945
+!MESSAGE Cannot bind to an undefined command: plug-in='org.knime.workbench.editor', id='knime.commands.editor.gridSettings'
+!SESSION 2019-03-24 19:51:21.924 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.8.0_172
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Framework arguments:  -application org.knime.product.KNIME_APPLICATION
+Command-line arguments:  -application org.knime.product.KNIME_APPLICATION -data C:\Users\Mehmet\Documents\GitHub\capstone-project\eclipse-workspace/../runtime-KNIME -dev file:C:/Users/Mehmet/Documents/GitHub/capstone-project/eclipse-workspace/.metadata/.plugins/org.eclipse.pde.core/KNIME Analytics Platform/dev.properties -os win32 -ws win32 -arch x86_64 -consoleLog
+
+!ENTRY org.eclipse.ui 2 0 2019-03-24 19:51:57.081
+!MESSAGE Warnings while parsing the key bindings from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.bindings' extension point
+!SUBENTRY 1 org.eclipse.ui 2 0 2019-03-24 19:51:57.081
+!MESSAGE Cannot bind to an undefined command: plug-in='org.knime.workbench.editor', id='knime.commands.editor.gridSettings'
+!SESSION 2019-03-24 19:54:19.417 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.8.0_172
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Framework arguments:  -application org.knime.product.KNIME_APPLICATION
+Command-line arguments:  -application org.knime.product.KNIME_APPLICATION -data C:\Users\Mehmet\Documents\GitHub\capstone-project\eclipse-workspace/../runtime-KNIME -dev file:C:/Users/Mehmet/Documents/GitHub/capstone-project/eclipse-workspace/.metadata/.plugins/org.eclipse.pde.core/KNIME Analytics Platform/dev.properties -os win32 -ws win32 -arch x86_64 -consoleLog
+
+!ENTRY org.eclipse.ui 2 0 2019-03-24 19:54:54.548
+!MESSAGE Warnings while parsing the key bindings from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.bindings' extension point
+!SUBENTRY 1 org.eclipse.ui 2 0 2019-03-24 19:54:54.548
+!MESSAGE Cannot bind to an undefined command: plug-in='org.knime.workbench.editor', id='knime.commands.editor.gridSettings'
+!SESSION 2019-03-24 19:55:56.053 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.8.0_172
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Framework arguments:  -application org.knime.product.KNIME_APPLICATION
+Command-line arguments:  -application org.knime.product.KNIME_APPLICATION -data C:\Users\Mehmet\Documents\GitHub\capstone-project\eclipse-workspace/../runtime-KNIME -dev file:C:/Users/Mehmet/Documents/GitHub/capstone-project/eclipse-workspace/.metadata/.plugins/org.eclipse.pde.core/KNIME Analytics Platform/dev.properties -os win32 -ws win32 -arch x86_64 -consoleLog
+
+!ENTRY org.eclipse.ui 2 0 2019-03-24 19:56:29.952
+!MESSAGE Warnings while parsing the key bindings from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.bindings' extension point
+!SUBENTRY 1 org.eclipse.ui 2 0 2019-03-24 19:56:29.952
+!MESSAGE Cannot bind to an undefined command: plug-in='org.knime.workbench.editor', id='knime.commands.editor.gridSettings'
