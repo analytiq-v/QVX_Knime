@@ -1,6 +1,6 @@
 /bin/
-not/target/
-not.classpath
-not.project
-not.settings
 /target/
+.classpath
+.project
+.settings
+/target/classes/*

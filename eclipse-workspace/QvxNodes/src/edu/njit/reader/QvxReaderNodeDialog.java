@@ -1,5 +1,6 @@
 package edu.njit.reader;
 
+import edu.njit.util.Util;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
@@ -24,6 +25,16 @@ public class QvxReaderNodeDialog extends DefaultNodeSettingsPane {
      */
     protected QvxReaderNodeDialog() {
         super();
+        
+        /* Test of QvxReader class */
+        Object[][] results = QvxReader.readFromQvx(Util.PROJECT_DIR + "products.qvx");
+        for(int i = 0; i < results.length; i++) {
+        	for(int j = 0; j < results.length; j++) {
+        		System.out.print(results[i][j]);
+        		System.out.print(" ");
+        	}
+        	System.out.println();
+        }
         
         addDialogComponent(new DialogComponentNumber(
                 new SettingsModelIntegerBounded(
