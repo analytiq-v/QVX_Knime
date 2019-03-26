@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: QvxWriter-Node extension for KNIME Workbench
+Bundle-SymbolicName: edu.njit.qvxwriter; singleton:=true
+Bundle-Version: 1.0.0
+Bundle-ClassPath: qvxwriter.jar
+Bundle-Activator: edu.njit.qvxwriter.QvxWriterNodePlugin
+Bundle-Vendor: 
+Require-Bundle: org.eclipse.core.runtime,
+ org.knime.workbench.core,
+ org.knime.workbench.repository,
+ org.knime.base
+Bundle-ActivationPolicy: lazy
+Export-Package: edu.njit.qvxwriter
+
