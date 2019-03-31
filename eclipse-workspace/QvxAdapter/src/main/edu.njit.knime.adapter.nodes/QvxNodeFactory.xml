@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./default.png" type="Manipulator" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>Qvx</name>
+    
+    <shortDescription>
+        Developing new nodes in KNIME to read different QVX file formats
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>transferring new nodes developed in eclipse to knime workspace</intro>
+        
+        
+        <option name="QVXNodePlugin">This is the eclipse bundle activator.
+									 Note: KNIME node developers probably won't have to do anything in here, 
+									 as this class is only needed by the eclipse platform/plugin mechanism.
+									 If you want to move/rename this file, make sure to change the plugin.xml
+									 file in the project root directory accordingly.
+									 This method is called upon plug-in activation.
+ 		</option>
+        <option name="QVXNodeFactory">Developing new nodes in KNIME to read different QVX file formats</option>
+        <option name="QVXNodeModel"> This is the model implementation of Qvx.
+ 									 Developing new nodes in KNIME to read different QVX file formats</option>
+        <option name="QVXNodeDialog"> This node dialog derives from {@link DefaultNodeSettingsPane} which allows
+								 	  creation of a simple dialog with standard components. If you need a more 
+									  complex dialog please derive directly from 
+ 									  {@link org.knime.core.node.NodeDialogPane}.</option>
+        <option name="QVXNodeView">TODO instantiate the components of the view here us the QVXModel and QVXNodeFactory classes</option>
+        <!-- possibly more options that can also be grouped by tabs -->
+        <!--
+        <tab name="Standard Options">
+            <option name="short name of first option (like in the dialog)">description of first option</option>
+            <option name="short name of second option (like in the dialog)">description of second option</option>
+        </tab>
+        <tab name="Advanced Options">
+            <option name="short name of first advanced option (like in the dialog)">description of first advanced option</option>
+        </tab>
+        -->
+    </fullDescription>
+</knimeNode>
