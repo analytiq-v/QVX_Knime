@@ -6,7 +6,7 @@
 //
 
 
-package edu.njit.knime.adapter.qvx;
+package main.java.edu.njit.knime.adapter.qvx;
 
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlType;
