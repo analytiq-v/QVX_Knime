@@ -71,6 +71,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         filesHistoryPanel = new FilesHistoryPanel(
         		createFlowVariableModel("CFGKEY_FILE", FlowVariable.Type.STRING),
         		"History ID", LocationValidation.FileOutput, ".qvx");
+        filesHistoryPanel.setDialogTypeSaveWithExtension(".qvx");
         filesPanel.add(filesHistoryPanel);
         
         overwritePolicy_abortButton = new JRadioButton();
@@ -96,7 +97,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 		QvxWriterNodeSettings m_settings = new QvxWriterNodeSettings();
 	
 		//fileName
-		String fileName = removeSuffix(filesHistoryPanel.getSelectedFile(), ".qvx") + ".qvx";
+		String fileName = filesHistoryPanel.getSelectedFile();
 		m_settings.setFileName(fileName);
 		
 		//overwritePolicy

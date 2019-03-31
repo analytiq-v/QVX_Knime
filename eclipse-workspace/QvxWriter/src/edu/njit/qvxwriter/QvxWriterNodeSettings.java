@@ -22,7 +22,7 @@ public class QvxWriterNodeSettings {
 		
 		public String toString() {
 			return name;
-		}		
+		}
 	}	
 
 	static enum OverwritePolicy {
