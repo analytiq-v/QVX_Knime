@@ -1,12 +1,5 @@
 package edu.njit.util;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 public class Util {
 	
 	public static void checkNotNull(Object obj, String name) {
@@ -16,4 +9,12 @@ public class Util {
     		throw new RuntimeException(name + "is null!");
     	}
     }
+	
+	public static String removeSuffix(String s, String suffix) {
+		if (s.endsWith(suffix)) {
+			return s.substring(0, s.lastIndexOf(suffix));
+		}else {
+			return s;
+		}
+	}
 }

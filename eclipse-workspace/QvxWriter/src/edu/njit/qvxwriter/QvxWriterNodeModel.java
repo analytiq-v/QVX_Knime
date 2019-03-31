@@ -1,7 +1,15 @@
 package edu.njit.qvxwriter;
 
+import edu.njit.qvx.QvxTableHeader;
+
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -26,7 +34,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
  * This is the model implementation of QvxWriter.
  * 
@@ -41,22 +48,13 @@ public class QvxWriterNodeModel extends NodeModel {
 
     private QvxWriterNodeSettings m_settings;
     
-    // example value: the models count variable filled from the dialog 
-    // and used in the models execution method. The default components of the
-    // dialog work with "SettingsModels".
-    /*private final SettingsModelIntegerBounded m_count =
-        new SettingsModelIntegerBounded(QvxWriterNodeSettings.CFGKEY_COUNT,
-                    QvxWriterNodeSettings.DEFAULT_COUNT,
-                    Integer.MIN_VALUE, Integer.MAX_VALUE);
-    What is the point of this object? It will likely be removed from this project.
-    */
     /**
      * Constructor for the node model.
      */
     protected QvxWriterNodeModel() {
     
         // 1 incoming port and 0 outgoing ports
-        super(1, 1);
+        super(1, 0);
         m_settings = new QvxWriterNodeSettings();
     }
 
@@ -67,49 +65,15 @@ public class QvxWriterNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
     	
-    	return writeQvxFile(inData[0]); 
+    	writeQvxFile(inData[0]);
+    	return null;
     }
-    	/*
-    	System.out.println(inData[0].getSummary());
-    	System.out.println(inData[0].getDataTableSpec());
-    	DataTableSpec spec = inData[0].getDataTableSpec();
-    	String[] columnNames = spec.getColumnNames();
-    	for(String column : columnNames) {
-    		DataColumnSpec columnSpec = spec.getColumnSpec(column);
-    		System.out.println(column + "\t" + columnSpec.getType());
-    	}
-    	
-    	System.out.println("Number of columns:" + spec.getNumColumns());
+    
+    protected void writeQvxFile(final BufferedDataTable table) {
     	QvxWriter qvxWriter = new QvxWriter();
-    	qvxWriter.writeQvxFile(inData[0], "C:\\Users\\Mehmet\\Documents\\KNIME\\products.qvx");
-    	        
-        // Dummy code, to prevent error
-        DataColumnSpec[] allColSpecs = new DataColumnSpec[3];
-        DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
-        BufferedDataContainer container = exec.createDataContainer(outputSpec);
-        for (int i = 0; i < allColSpecs.length; i++) {
-            RowKey key = new RowKey("Row " + i);
-            DataCell[] cells = new DataCell[allColSpecs.length];
-            for(int j = 0; j < allColSpecs.length; j++) {
-            	cells[j] = new StringCell("Value");
-            }           
-            DataRow row = new DefaultRow(key, cells);
-            container.addRowToTable(row);
-            exec.checkCanceled();
-            exec.setProgress(i / allColSpecs.length, "Adding row " + i);
-        }
-        container.close();
-        BufferedDataTable out = container.getTable();
-        System.out.println("Output row count: " + out.size());
-        // Do not return anything meaningful, since the output is a qvx file, not a BufferedDataTable
-        return new BufferedDataTable[]{out};    	
-    }
-    */
-    protected BufferedDataTable[] writeQvxFile(final BufferedDataTable table) {
-    	QvxWriter qvxWriter = new QvxWriter();
-    	//qvxWriter.writeQvxFile(table, "C:\\Users\\Mehmet\\Documents\\KNIME\\products.qvx");
+    	String outFileName = m_settings.getFileName();
+    	qvxWriter.writeQvxFile(table, outFileName, m_settings);
     	System.out.println("Write Qvx File finished executing");
-    	return new BufferedDataTable[0];
     }
 
     /**
@@ -167,20 +131,8 @@ public class QvxWriterNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
             
-        // TODO check if the settings could be applied to our model
-        // e.g. if the count is in a certain range (which is ensured by the
-        // SettingsModel).
-        // Do not actually set any values of any member variables.
-    	
-    	//TODO: Don't really think there is anything we need to validate
-    	//File file = new File(settings.getString(CFGKEY_FILE_NAME));
-    	//if (file.exists() &&)
     	System.out.println("NodeModel: validateSettings()");
-    	/*if (settings.getBoolean(CFGKEY_IS_BIG_ENDIAN)) {
-    		throw new InvalidSettingsException("Little Endian is expected!");
-    	}*/
-        //m_count.validateSettings(settings);
-    	//settings.get
+    	//TODO: Finish "validate" method and call it from here
 
     }
     
@@ -224,6 +176,5 @@ public class QvxWriterNodeModel extends NodeModel {
     protected void validate() {
     	
     }
-
 }
 

@@ -24,15 +24,14 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.util.FilesHistoryPanel;
 import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
 import org.knime.core.node.workflow.FlowVariable;
 
 import edu.njit.qvx.QvxTableHeader;
-import edu.njit.util.Util;
 import edu.njit.qvxwriter.QvxWriter;
+
+import static edu.njit.util.Util.removeSuffix;
 
 /**
  * <code>NodeDialog</code> for the "QvxWriter" Node.
@@ -105,16 +104,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         settingsPanel.add(overwritePolicyPanel);
         settingsPanel.add(endiannessPanel);
         
-        addTab("Settings", settingsPanel);
-        
-        /*
-        addDialogComponent(new DialogComponentNumber(
-                new SettingsModelIntegerBounded(
-                    QvxWriterNodeModel.CFGKEY_COUNT,
-                    QvxWriterNodeModel.DEFAULT_COUNT,
-                    Integer.MIN_VALUE, Integer.MAX_VALUE),
-                    "Counter:", 1, /*componentwidth*));
-             */       
+        addTab("Settings", settingsPanel);     
     }
     
 	@Override
@@ -132,7 +122,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 		m_settings.setIsBigEndian(isBigEndian);
 		
 		//fileName
-		String fileName = filesHistoryPanel.getSelectedFile();
+		String fileName = removeSuffix(filesHistoryPanel.getSelectedFile(), ".qvx") + ".qvx";
 		m_settings.setFileName(fileName);
 		
 		//overwritePolicy
@@ -198,7 +188,6 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 			recordSeparatorCheckBox.setSelected(usesRecordSeparator);
 				
 		} catch (InvalidSettingsException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -222,7 +211,4 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 		}
 		return panel;
 	}
-    
-    
 }
-
