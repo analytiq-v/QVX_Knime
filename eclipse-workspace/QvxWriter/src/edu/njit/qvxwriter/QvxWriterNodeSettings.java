@@ -40,7 +40,6 @@ public class QvxWriterNodeSettings {
 		}		
 	}
 	
-	//static final String CFGKEY_COUNT = "Count"; What is the point of this? Possibly delete
 	static final String CFGKEY_FILE_NAME = "fileName";
 	static final String CFGKEY_OVERWRITE_POLICY = "fileOverwritePolicy";
 	static final String CFGKEY_IS_BIG_ENDIAN = "isBigEndian";
