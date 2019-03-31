@@ -9,6 +9,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -37,31 +38,26 @@ public class QvxWriterNodeModel extends NodeModel {
     // the logger instance
     private static final NodeLogger logger = NodeLogger
             .getLogger(QvxWriterNodeModel.class);
-        
-    /** the settings key which is used to retrieve and 
-        store the settings (from the dialog or from a settings file)    
-       (package visibility to be usable from the dialog). */
-	static final String CFGKEY_COUNT = "Count";
 
-    /** initial default count value. */
-    static final int DEFAULT_COUNT = 100;
-
+    private QvxWriterNodeSettings m_settings;
+    
     // example value: the models count variable filled from the dialog 
     // and used in the models execution method. The default components of the
     // dialog work with "SettingsModels".
-    private final SettingsModelIntegerBounded m_count =
-        new SettingsModelIntegerBounded(QvxWriterNodeModel.CFGKEY_COUNT,
-                    QvxWriterNodeModel.DEFAULT_COUNT,
+    /*private final SettingsModelIntegerBounded m_count =
+        new SettingsModelIntegerBounded(QvxWriterNodeSettings.CFGKEY_COUNT,
+                    QvxWriterNodeSettings.DEFAULT_COUNT,
                     Integer.MIN_VALUE, Integer.MAX_VALUE);
-    
-
+    What is the point of this object? It will likely be removed from this project.
+    */
     /**
      * Constructor for the node model.
      */
     protected QvxWriterNodeModel() {
     
-        // TODO one incoming port and one outgoing port is assumed
+        // 1 incoming port and 0 outgoing ports
         super(1, 1);
+        m_settings = new QvxWriterNodeSettings();
     }
 
     /**
@@ -70,47 +66,50 @@ public class QvxWriterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-
-        // TODO do something here
-        logger.info("Node Model Stub... this is not yet implemented !");
-
-        
-        // the data table spec of the single output table, 
-        // the table will have three columns:
+    	
+    	return writeQvxFile(inData[0]); 
+    }
+    	/*
+    	System.out.println(inData[0].getSummary());
+    	System.out.println(inData[0].getDataTableSpec());
+    	DataTableSpec spec = inData[0].getDataTableSpec();
+    	String[] columnNames = spec.getColumnNames();
+    	for(String column : columnNames) {
+    		DataColumnSpec columnSpec = spec.getColumnSpec(column);
+    		System.out.println(column + "\t" + columnSpec.getType());
+    	}
+    	
+    	System.out.println("Number of columns:" + spec.getNumColumns());
+    	QvxWriter qvxWriter = new QvxWriter();
+    	qvxWriter.writeQvxFile(inData[0], "C:\\Users\\Mehmet\\Documents\\KNIME\\products.qvx");
+    	        
+        // Dummy code, to prevent error
         DataColumnSpec[] allColSpecs = new DataColumnSpec[3];
-        allColSpecs[0] = 
-            new DataColumnSpecCreator("Column 0", StringCell.TYPE).createSpec();
-        allColSpecs[1] = 
-            new DataColumnSpecCreator("Column 1", DoubleCell.TYPE).createSpec();
-        allColSpecs[2] = 
-            new DataColumnSpecCreator("Column 2", IntCell.TYPE).createSpec();
         DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
-        // the execution context will provide us with storage capacity, in this
-        // case a data container to which we will add rows sequentially
-        // Note, this container can also handle arbitrary big data tables, it
-        // will buffer to disc if necessary.
         BufferedDataContainer container = exec.createDataContainer(outputSpec);
-        // let's add m_count rows to it
-        for (int i = 0; i < m_count.getIntValue(); i++) {
+        for (int i = 0; i < allColSpecs.length; i++) {
             RowKey key = new RowKey("Row " + i);
-            // the cells of the current row, the types of the cells must match
-            // the column spec (see above)
-            DataCell[] cells = new DataCell[3];
-            cells[0] = new StringCell("String_" + i); 
-            cells[1] = new DoubleCell(0.5 * i); 
-            cells[2] = new IntCell(i);
+            DataCell[] cells = new DataCell[allColSpecs.length];
+            for(int j = 0; j < allColSpecs.length; j++) {
+            	cells[j] = new StringCell("Value");
+            }           
             DataRow row = new DefaultRow(key, cells);
             container.addRowToTable(row);
-            
-            // check if the execution monitor was canceled
             exec.checkCanceled();
-            exec.setProgress(i / (double)m_count.getIntValue(), 
-                "Adding row " + i);
+            exec.setProgress(i / allColSpecs.length, "Adding row " + i);
         }
-        // once we are done, we close the container and return its table
         container.close();
         BufferedDataTable out = container.getTable();
-        return new BufferedDataTable[]{out};
+        System.out.println("Output row count: " + out.size());
+        // Do not return anything meaningful, since the output is a qvx file, not a BufferedDataTable
+        return new BufferedDataTable[]{out};    	
+    }
+    */
+    protected BufferedDataTable[] writeQvxFile(final BufferedDataTable table) {
+    	QvxWriter qvxWriter = new QvxWriter();
+    	//qvxWriter.writeQvxFile(table, "C:\\Users\\Mehmet\\Documents\\KNIME\\products.qvx");
+    	System.out.println("Write Qvx File finished executing");
+    	return new BufferedDataTable[0];
     }
 
     /**
@@ -145,9 +144,8 @@ public class QvxWriterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
 
-        // TODO save user settings to the config object.
-        
-        m_count.saveSettingsTo(settings);
+        System.out.println("NodeModel: saveSettingsTo()");
+        m_settings.saveSettingsTo(settings);
 
     }
 
@@ -157,13 +155,9 @@ public class QvxWriterNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-            
-        // TODO load (valid) settings from the config object.
-        // It can be safely assumed that the settings are valided by the 
-        // method below.
         
-        m_count.loadSettingsFrom(settings);
-
+    	System.out.println("NodeModel: loadValidatedSettingsFrom()");
+    	m_settings = new QvxWriterNodeSettings(settings);
     }
 
     /**
@@ -177,8 +171,16 @@ public class QvxWriterNodeModel extends NodeModel {
         // e.g. if the count is in a certain range (which is ensured by the
         // SettingsModel).
         // Do not actually set any values of any member variables.
-
-        m_count.validateSettings(settings);
+    	
+    	//TODO: Don't really think there is anything we need to validate
+    	//File file = new File(settings.getString(CFGKEY_FILE_NAME));
+    	//if (file.exists() &&)
+    	System.out.println("NodeModel: validateSettings()");
+    	/*if (settings.getBoolean(CFGKEY_IS_BIG_ENDIAN)) {
+    		throw new InvalidSettingsException("Little Endian is expected!");
+    	}*/
+        //m_count.validateSettings(settings);
+    	//settings.get
 
     }
     
@@ -196,7 +198,8 @@ public class QvxWriterNodeModel extends NodeModel {
         // and user settings set through loadSettingsFrom - is all taken care 
         // of). Load here only the other internals that need to be restored
         // (e.g. data used by the views).
-
+    	
+    	System.out.println("NodeModel: loadInternals()");
     }
     
     /**
@@ -213,7 +216,13 @@ public class QvxWriterNodeModel extends NodeModel {
         // and user settings saved through saveSettingsTo - is all taken care 
         // of). Save here only the other internals that need to be preserved
         // (e.g. data used by the views).
+    	System.out.println("NodeModel: saveInternals()");
 
+    }
+    
+    // Validation methods
+    protected void validate() {
+    	
     }
 
 }

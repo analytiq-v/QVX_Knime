@@ -17,6 +17,13 @@ import javax.xml.bind.Marshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
+import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.node.BufferedDataTable;
+
 import edu.njit.qvx.QvxFieldExtent;
 import edu.njit.qvx.QvxFieldType;
 import edu.njit.qvx.QvxNullRepresentation;
@@ -26,37 +33,44 @@ import edu.njit.util.Util;
 
 public class QvxWriter {
 	
-	private static String[][] data;
-	private static String qvxOutFileName;
+	private BufferedDataTable table;
+	private String[] fieldNames;
+	private String[][] data;
+	private String outFileName;
 
-	private static QvxTableHeader tableHeader;
-	private static int bufferIndex = 0;
-	private static FileOutputStream outputStream;
+	private QvxTableHeader tableHeader;
+	private int bufferIndex = 0;
+	private FileOutputStream outputStream;
 	
 	private static final int BUFFER_SIZE = (int)Math.pow(2, 20); //1 MB of memory
 	private static final byte RECORD_SEPARATOR = 0x1E;
 	private static final byte FILE_SEPARATOR = 0x1C;
 	private static final byte NUL = 0x00;
 	
-	public static void writeQvxFromCsv(String csvFileName, String _qvxFileName, QvxTableHeader _tableHeader) {
+	//public void writeQvxFile(BufferedDataTable table, String qvxFileName, QvxTableHeader _tableHeader) {
+	
+	public void writeQvxFile(BufferedDataTable table, String outFileName) {
+		this.table = table;
+		this.fieldNames = table.getSpec().getColumnNames();
+		this.outFileName = outFileName;
+		this.data = dataTableToArray(table);
 		
-		data = Util.csvTo2DArray(csvFileName);
-		tableHeader = _tableHeader;
-		qvxOutFileName = _qvxFileName;
-		
+		/*
 		writeTableHeader();
 		writeBody();
+		dataTableToArray(table);
+		*/
 	}
 	
-	private static void writeTableHeader() {
+	private void writeTableHeader() {
 				
 		QvxTableHeader.Fields fields = new QvxTableHeader.Fields();
-		String[] fieldNames = data[0];
 		for(int i = 0; i < fieldNames.length; i++) {
 			/* Create a QvxFieldHeader for each field */
 
 			String[] column = getDataColumn(i);
 			QvxTableHeader.Fields.QvxFieldHeader qvxFieldHeader = new QvxTableHeader.Fields.QvxFieldHeader();
+			
 			qvxFieldHeader.setFieldName(fieldNames[i]);
 			setFieldTypeAndByteWidth(qvxFieldHeader, column);
 			qvxFieldHeader.setExtent(determineExtent(qvxFieldHeader));
@@ -73,7 +87,7 @@ public class QvxWriter {
 			JAXBContext jaxbContext;
 			jaxbContext = JAXBContext.newInstance(QvxTableHeader.class);
 			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-			outputStream = new FileOutputStream(qvxOutFileName);
+			outputStream = new FileOutputStream(outFileName);
 			jaxbMarshaller.marshal(tableHeader, outputStream);
 			outputStream.write(NUL); //Zero-byte separator between xml and qvx body
 		}
@@ -82,7 +96,7 @@ public class QvxWriter {
 		}
 	}
 	
-	private static void writeBody() {
+	private void writeBody() {
 		
 		/* Write the "data" values to the body of the FileOutputStream
 		 */
@@ -119,7 +133,7 @@ public class QvxWriter {
 	}
 
 	//Helper methods --------------------------------------------------
-	public static byte[] convertToByteValue(QvxFieldHeader fieldHeader, String s) {
+	private byte[] convertToByteValue(QvxFieldHeader fieldHeader, String s) {
 					
 		int byteWidth = fieldHeader.getByteWidth().intValue();
 		ByteBuffer byteBuffer = null;
@@ -150,6 +164,35 @@ public class QvxWriter {
 		}
 	}
 	
+	private String[][] dataTableToArray(BufferedDataTable table){
+		
+		String[][] arr = new String[(int)table.size()][table.getSpec().getNumColumns()];
+		CloseableRowIterator iterator = table.iterator();
+		int rowIndex = 0;
+        while (iterator.hasNext()) {
+        	DataRow row = iterator.next();
+        	for(int columnIndex = 0; columnIndex < row.getNumCells(); columnIndex++) {
+        		//String type = spec.getColumnSpec(columnIndex).getType().getName();
+        		DataCell cell = row.getCell(columnIndex);
+        		arr[rowIndex][columnIndex] = cell.toString();
+        		
+        		/*//TODO: Save everything as strings for now, during this step
+        		if (type.equals("Number (integer)")) {
+        			System.out.println("Type is integer");
+        		}else if (type.equals("Number (double)")) {
+        			System.out.println("Type is double");
+        		}else if (type.equals("String")) {
+        			System.out.println("Type is string");
+        		}
+        		String s = cell.toString();*/
+        	}
+        	System.out.println();
+        	rowIndex++;
+        }
+		return arr;
+	}
+	
+	/*
 	public static QvxTableHeader defaultTableHeader(){
 		
 		QvxTableHeader tableHeader = new QvxTableHeader();
@@ -165,9 +208,9 @@ public class QvxWriter {
 		catch(DatatypeConfigurationException e) { e.printStackTrace(); }
 		
 		return tableHeader;
-	}
+	}*/
 	
-	public static QvxFieldExtent determineExtent(QvxFieldHeader fieldHeader) {
+	private QvxFieldExtent determineExtent(QvxFieldHeader fieldHeader) {
 		
 		if (fieldHeader.getType() == QvxFieldType.QVX_TEXT) {
 			return QvxFieldExtent.QVX_ZERO_TERMINATED;
@@ -177,15 +220,16 @@ public class QvxWriter {
 	}
 	
 	private static String[] getDataColumn(int j) {
-		
+		/*
 		String[] column = new String[data.length - 1];
 		for(int i = 1; i < data.length; i++) {
 			column[i-1] = data[i][j];
 		}
-		return column;
+		return column;*/
+		return null;
 	}
 	
-	public static int insertInto(byte[] target, byte[] values, int offset) {
+	private static int insertInto(byte[] target, byte[] values, int offset) {
 		
 		/* Copy all of the elements of "values" into "target", starting at target[startIndex]. Return
 		 * the index of "target" where the next inserted value would go. If there would be buffer overflow, do not do any insertions and
@@ -202,7 +246,7 @@ public class QvxWriter {
 		return i;
 	}
 	
-	public static void setFieldTypeAndByteWidth(QvxFieldHeader fieldHeader, String[] values) {
+	private void setFieldTypeAndByteWidth(QvxFieldHeader fieldHeader, String[] values) {
 		
 		// Assume the type is QVX_UNSIGNED_INTEGER, and byte width is 4; overrule these assumptions if necessary
 		fieldHeader.setType(QvxFieldType.QVX_UNSIGNED_INTEGER);
@@ -255,7 +299,7 @@ public class QvxWriter {
 		}
 	}
 	
-	public static byte[] stringToByteArray_zeroTerminated(QvxFieldHeader fieldHeader, String s) {
+	private byte[] stringToByteArray_zeroTerminated(QvxFieldHeader fieldHeader, String s) {
 		
 		//TODO: QVX file has a bunch of different null values; why does this happen?
 		Integer codePage = null;
@@ -277,20 +321,10 @@ public class QvxWriter {
 		throw new IllegalStateException("Unrecognized code page");
 	}
 	
-	public void process (QvxTableHeader qvxTableHeader, String filepath) throws FileNotFoundException, JAXBException {
-		
-		JAXBContext jaxbContext;
-		jaxbContext = JAXBContext.newInstance( QvxTableHeader.class );
-		Marshaller jaxbMarshaller   = jaxbContext.createMarshaller();
-		OutputStream os = new FileOutputStream( filepath  );
-		jaxbMarshaller.marshal( qvxTableHeader, os );
-		System.out.println(jaxbMarshaller.toString());
-	}
-	
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		
 		 //Test #1
 		 QvxTableHeader tableHeader = defaultTableHeader();
 		 writeQvxFromCsv("products.csv", "products.qvx", tableHeader);
-	}
+	}*/
 }
