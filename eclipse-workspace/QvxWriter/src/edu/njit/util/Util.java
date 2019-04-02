@@ -6,7 +6,7 @@ public class Util {
     	if (obj != null) {
     		System.out.println(name + " has a value"); 
     	}else {
-    		throw new RuntimeException(name + "is null!");
+    		throw new RuntimeException(name + " is null!");
     	}
     }
 	

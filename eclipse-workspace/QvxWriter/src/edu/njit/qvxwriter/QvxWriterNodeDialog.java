@@ -65,6 +65,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 	private final JRadioButton overwritePolicy_overwriteButton;
 	
 	private final AdvancedPanel advancedPanel;
+	private final LimitRowsPanel limitRowsPanel;
 		
     protected QvxWriterNodeDialog() {
         super();
@@ -110,6 +111,9 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         
         advancedPanel = new AdvancedPanel();
         addTab("Advanced", advancedPanel);
+        
+        //limitRowsPanel = new LimitRowsPanel(); TODO
+        //addTab("Limit Rows", limitRowsPanel);
         
         System.out.println("Settings dimension: " + settingsPanel.getPreferredSize());
         
