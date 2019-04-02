@@ -17,4 +17,14 @@ public class Util {
 			return s;
 		}
 	}
+	
+	public static String toTitleCase(String s) {
+		/* Return a copy of s with the first letter capitalized */
+		
+		if (s.length() == 0) {
+			return s;
+		}
+		
+		return ("" + s.charAt(0)).toUpperCase() + s.substring(1, s.length());
+	}
 }

@@ -2,11 +2,13 @@ package edu.njit.qvxwriter;
 
 import edu.njit.qvxwriter.QvxWriterNodeSettings.Endianness;
 import edu.njit.qvxwriter.QvxWriterNodeSettings.OverwritePolicy;
+import javafx.beans.value.ObservableValue;
 
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.File;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -16,6 +18,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -33,6 +37,7 @@ import edu.njit.qvxwriter.QvxWriter;
 
 import static edu.njit.util.Component.radioPanel;
 import static edu.njit.util.Util.removeSuffix;
+import static edu.njit.util.Util.toTitleCase;
 
 /**
  * <code>NodeDialog</code> for the "QvxWriter" Node.
@@ -52,6 +57,8 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 	
 	private final JPanel filesPanel;
 	private final FilesHistoryPanel filesHistoryPanel;
+	
+	private final TableNamePanel tableNamePanel;
 	
 	private final JPanel overwritePolicyPanel;
 	private final JRadioButton overwritePolicy_abortButton;
@@ -74,6 +81,8 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         filesHistoryPanel.setDialogTypeSaveWithExtension(".qvx");
         filesPanel.add(filesHistoryPanel);
         
+        tableNamePanel = new TableNamePanel();
+        
         overwritePolicy_abortButton = new JRadioButton();
         overwritePolicy_overwriteButton = new JRadioButton();
         overwritePolicyPanel = radioPanel("If file exists...",
@@ -82,13 +91,28 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         );
         overwritePolicy_abortButton.setSelected(true);
         
-        settingsPanel.add(filesPanel);
-        settingsPanel.add(overwritePolicyPanel);
+        filesHistoryPanel.addChangeListener(new ChangeListener() {
+        	@Override
+        	public void stateChanged(final ChangeEvent e) {
+        		String tableName = filesHistoryPanel.getSelectedFile();
+        		File f = new File(tableName);
+        		tableName = f.getName();	
+        		tableName = removeSuffix(tableName, ".qvx");
+        		tableName = toTitleCase(tableName);
+        		tableNamePanel.setDefaultName(tableName);
+        	}
+        });
         
+        settingsPanel.add(filesPanel);
+        settingsPanel.add(tableNamePanel);
+        settingsPanel.add(overwritePolicyPanel);       
         addTab("Settings", settingsPanel);
         
         advancedPanel = new AdvancedPanel();
         addTab("Advanced", advancedPanel);
+        
+        System.out.println("Settings dimension: " + settingsPanel.getPreferredSize());
+        
     }
     
 	@Override
@@ -110,6 +134,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 		m_settings.setOverwritePolicy(overwritePolicy);
 		
 		advancedPanel.saveSettingsInto(m_settings);
+		tableNamePanel.saveSettingsInto(m_settings);
 		
 		m_settings.saveSettingsTo(settings);
 	}
@@ -136,7 +161,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 			}
 			
 			advancedPanel.loadValuesIntoPanel(settings);
-
+			tableNamePanel.loadValuesIntoPanel(settings);
 		} catch (InvalidSettingsException e) {
 			e.printStackTrace();
 		}
