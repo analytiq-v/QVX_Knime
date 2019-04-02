@@ -81,7 +81,7 @@ public class QvxWriter {
 				}
 				catch(DatatypeConfigurationException e) { e.printStackTrace(); }
 				
-    	tableHeader.setTableName(removeSuffix(settings.getFileName(), ".qvx"));
+    	tableHeader.setTableName(settings.getTableName());
     	tableHeader.setUsesSeparatorByte(settings.getUsesSeparatorByte());
     	tableHeader.setBlockSize(BigInteger.valueOf(1)); //TODO: 1 by default; value should be based on a node setting
     	
