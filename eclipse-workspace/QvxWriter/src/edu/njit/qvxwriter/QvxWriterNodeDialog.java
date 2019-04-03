@@ -2,11 +2,13 @@ package edu.njit.qvxwriter;
 
 import edu.njit.qvxwriter.QvxWriterNodeSettings.Endianness;
 import edu.njit.qvxwriter.QvxWriterNodeSettings.OverwritePolicy;
+import javafx.beans.value.ObservableValue;
 
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.File;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -16,6 +18,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -31,7 +35,9 @@ import org.knime.core.node.workflow.FlowVariable;
 import edu.njit.qvx.QvxTableHeader;
 import edu.njit.qvxwriter.QvxWriter;
 
+import static edu.njit.util.Component.radioPanel;
 import static edu.njit.util.Util.removeSuffix;
+import static edu.njit.util.Util.toTitleCase;
 
 /**
  * <code>NodeDialog</code> for the "QvxWriter" Node.
@@ -52,16 +58,14 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 	private final JPanel filesPanel;
 	private final FilesHistoryPanel filesHistoryPanel;
 	
-	private final JPanel recordSeparatorPanel;
-	private final JCheckBox recordSeparatorCheckBox;
+	private final TableNamePanel tableNamePanel;
 	
 	private final JPanel overwritePolicyPanel;
 	private final JRadioButton overwritePolicy_abortButton;
 	private final JRadioButton overwritePolicy_overwriteButton;
 	
-	private final JPanel endiannessPanel;
-	private final JRadioButton endianness_bigEndianButton;
-	private final JRadioButton endianness_littleEndianButton;
+	private final AdvancedPanel advancedPanel;
+	private final LimitRowsPanel limitRowsPanel;
 		
     protected QvxWriterNodeDialog() {
         super();
@@ -75,13 +79,10 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         filesHistoryPanel = new FilesHistoryPanel(
         		createFlowVariableModel("CFGKEY_FILE", FlowVariable.Type.STRING),
         		"History ID", LocationValidation.FileOutput, ".qvx");
+        filesHistoryPanel.setDialogTypeSaveWithExtension(".qvx");
         filesPanel.add(filesHistoryPanel);
-                
-        recordSeparatorPanel = new JPanel();
-        recordSeparatorPanel.setBorder(new TitledBorder("Record Separator"));
-        recordSeparatorPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        recordSeparatorCheckBox = new JCheckBox("Use Record Separator");
-        recordSeparatorPanel.add(recordSeparatorCheckBox);
+        
+        tableNamePanel = new TableNamePanel();
         
         overwritePolicy_abortButton = new JRadioButton();
         overwritePolicy_overwriteButton = new JRadioButton();
@@ -91,38 +92,40 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         );
         overwritePolicy_abortButton.setSelected(true);
         
-        endianness_littleEndianButton = new JRadioButton();
-        endianness_bigEndianButton = new JRadioButton();
-        endiannessPanel = radioPanel("Endianness",
-        	new String[] {Endianness.LITTLE_ENDIAN.toString(), Endianness.BIG_ENDIAN.toString()},
-        	endianness_littleEndianButton, endianness_bigEndianButton
-        );
-        endianness_littleEndianButton.setSelected(true);
+        filesHistoryPanel.addChangeListener(new ChangeListener() {
+        	@Override
+        	public void stateChanged(final ChangeEvent e) {
+        		String tableName = filesHistoryPanel.getSelectedFile();
+        		File f = new File(tableName);
+        		tableName = f.getName();	
+        		tableName = removeSuffix(tableName, ".qvx");
+        		tableName = toTitleCase(tableName);
+        		tableNamePanel.setDefaultName(tableName);
+        	}
+        });
         
         settingsPanel.add(filesPanel);
-        settingsPanel.add(recordSeparatorPanel);
-        settingsPanel.add(overwritePolicyPanel);
-        settingsPanel.add(endiannessPanel);
+        settingsPanel.add(tableNamePanel);
+        settingsPanel.add(overwritePolicyPanel);       
+        addTab("Settings", settingsPanel);
         
-        addTab("Settings", settingsPanel);     
+        advancedPanel = new AdvancedPanel();
+        addTab("Advanced", advancedPanel);
+        
+        //limitRowsPanel = new LimitRowsPanel(); TODO
+        //addTab("Limit Rows", limitRowsPanel);
+        
+        System.out.println("Settings dimension: " + settingsPanel.getPreferredSize());
+        
     }
     
 	@Override
 	protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
 		System.out.println("NodeDialog: saveSettingsTo()");
 		QvxWriterNodeSettings m_settings = new QvxWriterNodeSettings();
-		
-		//isBigEndian
-		Boolean isBigEndian = null;
-		if (endianness_littleEndianButton.isSelected()) {
-			isBigEndian = false;
-		}else if (endianness_bigEndianButton.isSelected()) {
-			isBigEndian = true;
-		}
-		m_settings.setIsBigEndian(isBigEndian);
-		
+	
 		//fileName
-		String fileName = removeSuffix(filesHistoryPanel.getSelectedFile(), ".qvx") + ".qvx";
+		String fileName = filesHistoryPanel.getSelectedFile();
 		m_settings.setFileName(fileName);
 		
 		//overwritePolicy
@@ -134,14 +137,8 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 		}
 		m_settings.setOverwritePolicy(overwritePolicy);
 		
-		//usesRecordSeparator
-		Boolean usesSeparatorByte = null;
-		if (recordSeparatorCheckBox.isSelected()) {
-			usesSeparatorByte = true;
-		}else{
-			usesSeparatorByte = false;
-		}
-		m_settings.setUsesSeparatorByte(usesSeparatorByte);
+		advancedPanel.saveSettingsInto(m_settings);
+		tableNamePanel.saveSettingsInto(m_settings);
 		
 		m_settings.saveSettingsTo(settings);
 	}
@@ -151,64 +148,26 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
             final DataTableSpec[] specs) throws NotConfigurableException {
 		
 		System.out.println("NodeDialog: loadSettingsFrom()");
-		try {
-			System.out.println("IsBigEndian" + 
-					settings.getBoolean(QvxWriterNodeSettings.CFGKEY_IS_BIG_ENDIAN));
-			System.out.println("File name " + settings.getString(QvxWriterNodeSettings.CFGKEY_FILE_NAME));
-			System.out.println("Overwrite policy " +
-					settings.getString(QvxWriterNodeSettings.CFGKEY_OVERWRITE_POLICY));
-			System.out.println("Uses separator byte " +
-					settings.getBoolean(QvxWriterNodeSettings.CFGKEY_USES_RECORD_SEPARATOR));
-		
+		try {	
 			String fileName = settings.getString(QvxWriterNodeSettings.CFGKEY_FILE_NAME);
-			boolean usesRecordSeparator = settings.getBoolean(
-					QvxWriterNodeSettings.CFGKEY_USES_RECORD_SEPARATOR);
-			String overwritePolicy = settings.getString(
-					QvxWriterNodeSettings.CFGKEY_OVERWRITE_POLICY);
-			boolean isBigEndian = settings.getBoolean(QvxWriterNodeSettings.CFGKEY_IS_BIG_ENDIAN);
 			
-			//isBigEndian
-			if (isBigEndian) {
-				endianness_bigEndianButton.setSelected(true);
-			}else {
-				endianness_littleEndianButton.setSelected(true);
-			}
+			String overwritePolicy = settings.getString(
+					QvxWriterNodeSettings.CFGKEY_OVERWRITE_POLICY);			
 			
 			//fileName
 			filesHistoryPanel.setSelectedFile(fileName);
 			
 			//overwritePolicy
-			if (overwritePolicy.equals(OverwritePolicy.ABORT)){
+			if (overwritePolicy.equals(OverwritePolicy.ABORT.toString())){
 				overwritePolicy_abortButton.setSelected(true);
-			}else if (overwritePolicy.equals(OverwritePolicy.OVERWRITE)) {
+			}else if (overwritePolicy.equals(OverwritePolicy.OVERWRITE.toString())) {
 				overwritePolicy_overwriteButton.setSelected(true);
 			}
 			
-			//usesRecordSeparator
-			recordSeparatorCheckBox.setSelected(usesRecordSeparator);
-				
+			advancedPanel.loadValuesIntoPanel(settings);
+			tableNamePanel.loadValuesIntoPanel(settings);
 		} catch (InvalidSettingsException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	 
-    public static JPanel radioPanel(String title, String[] buttonTexts, JRadioButton... radioButtons) {
-		
-		if (buttonTexts.length != radioButtons.length) {
-			throw new RuntimeException("Number of button texts must match number of buttons");
-		}
-		
-		JPanel panel = new JPanel();
-		ButtonGroup buttonGroup = new ButtonGroup();
-		
-		panel.setBorder(new TitledBorder(title));
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
-		for(int i = 0; i < buttonTexts.length; i++) {
-			radioButtons[i].setText(buttonTexts[i]);
-			panel.add(radioButtons[i]);
-			buttonGroup.add(radioButtons[i]);
-		}
-		return panel;
 	}
 }

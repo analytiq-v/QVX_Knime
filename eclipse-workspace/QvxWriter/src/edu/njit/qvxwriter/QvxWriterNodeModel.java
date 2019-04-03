@@ -1,6 +1,6 @@
 package edu.njit.qvxwriter;
 
-import edu.njit.qvx.QvxTableHeader;
+import edu.njit.qvxwriter.QvxWriterNodeSettings.OverwritePolicy;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +33,9 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+
+import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_FILE_NAME;
+import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_OVERWRITE_POLICY;
 
 /**
  * This is the model implementation of QvxWriter.
@@ -133,6 +136,7 @@ public class QvxWriterNodeModel extends NodeModel {
             
     	System.out.println("NodeModel: validateSettings()");
     	//TODO: Finish "validate" method and call it from here
+    	validateFileName(settings);
 
     }
     
@@ -173,8 +177,22 @@ public class QvxWriterNodeModel extends NodeModel {
     }
     
     // Validation methods
-    protected void validate() {
+    protected void validateFileName(NodeSettingsRO settings) throws InvalidSettingsException {
+    	String fileName = settings.getString(CFGKEY_FILE_NAME);
+    	String overwritePolicy = settings.getString(CFGKEY_OVERWRITE_POLICY);
     	
+    	File file = new File(fileName);
+    	if (file.isDirectory()) {
+    		throw new InvalidSettingsException("The provided file name is a directory");
+    	}
+    	if(file.exists()) {
+    		if(overwritePolicy.equals(OverwritePolicy.ABORT.toString())) {
+    			throw new InvalidSettingsException("File already exists");
+    		}
+    	}
+    	if(!fileName.endsWith(".qvx")) {
+    		throw new InvalidSettingsException("Invalid file extension: \".qvx\" expected");
+    	}
     }
 }
 

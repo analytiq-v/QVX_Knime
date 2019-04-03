@@ -6,7 +6,7 @@ public class Util {
     	if (obj != null) {
     		System.out.println(name + " has a value"); 
     	}else {
-    		throw new RuntimeException(name + "is null!");
+    		throw new RuntimeException(name + " is null!");
     	}
     }
 	
@@ -16,5 +16,15 @@ public class Util {
 		}else {
 			return s;
 		}
+	}
+	
+	public static String toTitleCase(String s) {
+		/* Return a copy of s with the first letter capitalized */
+		
+		if (s.length() == 0) {
+			return s;
+		}
+		
+		return ("" + s.charAt(0)).toUpperCase() + s.substring(1, s.length());
 	}
 }
