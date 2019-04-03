@@ -65,7 +65,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 	private final JRadioButton overwritePolicy_overwriteButton;
 	
 	private final AdvancedPanel advancedPanel;
-	private final LimitRowsPanel limitRowsPanel;
+	//private final LimitRowsPanel limitRowsPanel;
 		
     protected QvxWriterNodeDialog() {
         super();
