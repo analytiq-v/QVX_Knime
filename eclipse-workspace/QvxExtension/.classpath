@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="src/main/edu.njit.knime.adapter.nodes.qvx/jaxb-api-2.4.0-b180830.0359.jar"/>
+	<classpathentry kind="lib" path="src/main/edu.njit.knime.adapter.nodes.qvx/org.eclipse.core.runtime-3.7.0.jar"/>
+	<classpathentry kind="lib" path="src/main/edu.njit.knime.adapter.nodes.qvx/org.knime.core.data.uritype_3.7.0.v201808081048.jar"/>
+	<classpathentry kind="lib" path="src/main/edu.njit.knime.adapter.nodes.qvx/org.osgi.core-4.2.0.jar"/>
+	<classpathentry kind="lib" path="src/main/edu.njit.knime.adapter.nodes.qvx/qvx.jar"/>
+	<classpathentry kind="lib" path="src/main/edu.njit.knime.adapter.nodes.qvx/saxon-he-9.2.0.5.jar"/>
+	<classpathentry kind="lib" path="src/main/edu.njit.knime.adapter.nodes.qvx/xbean.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
