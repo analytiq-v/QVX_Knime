@@ -67,10 +67,10 @@ public class QvxReader {
 		
 		System.out.println("reading from qvx table header");
 		readQvxTableHeader();
-		//System.out.println("printing body");
-		//printBody();
-		//return null;
-		readBody();
+		System.out.println("printing body");
+		printBody();
+		return null;
+		//readBody();
 		
 		/*
 		System.out.println(Arrays.toString(fieldNames));
@@ -78,15 +78,21 @@ public class QvxReader {
 			System.out.println(Arrays.toString(data.get(i)));
 		}*/
 		
-		return new BufferedDataTable[] {dataToDataTable()};
+		//return new BufferedDataTable[] {dataToDataTable()};
 	}
 	
 	private void printBody() {
+		System.out.flush();
+		System.out.println("Printing body...");
 		bufferIndex = zeroByteIndex + 1; //Starting index of the body
 		int endIndex = bufferIndex + 100;
 		//buffer.length
 		while(bufferIndex < endIndex) { //Keep reading until the end of the body is reached
-			System.out.println((char)(buffer[bufferIndex++]));
+			int value = buffer[bufferIndex++];
+			if (value < 0) {
+				value += 256;
+			}
+			System.out.println(value);
 		}
 	}
 	
