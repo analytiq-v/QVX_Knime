@@ -65,15 +65,29 @@ public class QvxReader {
 		this.inFileName = settings.getFileName();
 		this.exec = exec;
 		
+		System.out.println("reading from qvx table header");
 		readQvxTableHeader();
-		readBody();
+		System.out.println("printing body");
+		printBody();
+		return null;
+		//readBody();
 		
+		/*
 		System.out.println(Arrays.toString(fieldNames));
 		for(int i = 0; i < data.size(); i++) {
 			System.out.println(Arrays.toString(data.get(i)));
 		}
 		
-		return new BufferedDataTable[] {dataToDataTable()};
+		return new BufferedDataTable[] {dataToDataTable()};*/
+	}
+	
+	private void printBody() {
+		bufferIndex = zeroByteIndex + 1; //Starting index of the body
+		int endIndex = bufferIndex + 100;
+		//buffer.length
+		while(bufferIndex < endIndex) { //Keep reading until the end of the body is reached
+			System.out.println((char)(buffer[bufferIndex++]));
+		}
 	}
 	
 	private BufferedDataTable dataToDataTable() {

@@ -57,6 +57,7 @@ public class QvxReaderNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
+    	System.out.println("executing");
     	QvxReader qvxReader = new QvxReader();
     	return qvxReader.readQvx(m_settings, exec);
         /*// TODO do something here
