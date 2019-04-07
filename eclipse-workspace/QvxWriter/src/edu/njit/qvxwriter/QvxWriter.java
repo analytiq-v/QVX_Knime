@@ -25,6 +25,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.BufferedDataTable;
 
+import edu.njit.qvx.FieldAttrType;
+import edu.njit.qvx.FieldAttributes;
 import edu.njit.qvx.QvxFieldExtent;
 import edu.njit.qvx.QvxFieldType;
 import edu.njit.qvx.QvxNullRepresentation;
@@ -32,6 +34,7 @@ import edu.njit.qvx.QvxTableHeader;
 import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 import edu.njit.util.Util;
 
+import static edu.njit.util.Util.checkNotNull;
 import static edu.njit.util.Util.removeSuffix;
 
 public class QvxWriter {
@@ -63,6 +66,7 @@ public class QvxWriter {
 		for(int i = 0; i < data.length; i++) {
 			System.out.println(Arrays.toString(data[i]));
 		}
+		
 		configureTableHeader();
 		writeTableHeader();
 		writeBody();
@@ -293,6 +297,15 @@ public class QvxWriter {
 		}else if (type.equals("String")) {
 			fieldHeader.setType(QvxFieldType.QVX_TEXT);
 			fieldHeader.setByteWidth(BigInteger.valueOf(0));
+		}else if (type.equals("Local Date Time")){
+			fieldHeader.setType(QvxFieldType.QVX_TEXT);
+			fieldHeader.setByteWidth(BigInteger.valueOf(0));
+			
+			FieldAttributes fieldAttributes = new FieldAttributes();
+			fieldAttributes.setFmt(FieldAttrType.DATE.toString());
+			fieldHeader.setFieldFormat(fieldAttributes);;
+		}else {
+			throw new RuntimeException("Unrecognized KNIME type: " + type);
 		}
 	}
 	
