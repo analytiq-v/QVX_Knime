@@ -2,21 +2,21 @@ package practiceAndTesting;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Miscellaneous {
 
 	public static void main(String[] argv) {
-		//Object[] objs = new Object[1];
-		//objs[0] = ByteBuffer.wrap(new byte[] {3,5}).order(ByteOrder.BIG_ENDIAN).getShort();
 		
-		Object c = new Double(3.4);
-		System.out.println(c.getClass());
-		//System.out.println(.getClass().cast(c));
-		//Syste
+		String pattern = "[0-9]{1,4}[-/]([0-2][0-9])|([3][0-1])-/][0-9]{1,2}";
+		Pattern r = Pattern.compile(pattern);
+		
+		String[] lines = {"2019-2-03", "212-09-09", "532-2-09"};
+		for(String line : lines) {
+			Matcher m = r.matcher(line);
+			System.out.println(m.find());
+		}
 
-	}
-	
-	public static Object test() {
-		return 4.6;
 	}
 }

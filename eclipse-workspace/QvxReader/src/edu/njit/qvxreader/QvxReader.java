@@ -29,6 +29,8 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 
+import edu.njit.qvx.QvxFieldExtent;
+import edu.njit.qvx.QvxQvSpecialFlag;
 import edu.njit.qvx.QvxTableHeader;
 import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 
@@ -44,6 +46,9 @@ public class QvxReader {
 	 * Works with various field types
 	 * Various edge cases still need to be tested(such as usesSeparatorByte)
 	 */
+
+	private final byte FS_BYTE = 0x1C;
+	private final byte RS_BYTE = 0x1E;
 	
 	private QvxTableHeader qvxTableHeader;
 	private String inFileName;
@@ -67,22 +72,20 @@ public class QvxReader {
 		
 		System.out.println("reading from qvx table header");
 		readQvxTableHeader();
-		System.out.println("printing body");
-		printBody();
-		return null;
-		//readBody();
+		//printBody();
+		//return null;
+		readBody();
 		
-		/*
 		System.out.println(Arrays.toString(fieldNames));
 		for(int i = 0; i < data.size(); i++) {
 			System.out.println(Arrays.toString(data.get(i)));
-		}*/
+		}
 		
-		//return new BufferedDataTable[] {dataToDataTable()};
+		return new BufferedDataTable[] {dataToDataTable()};
 	}
 	
+	/*
 	private void printBody() {
-		System.out.flush();
 		System.out.println("Printing body...");
 		bufferIndex = zeroByteIndex + 1; //Starting index of the body
 		int endIndex = bufferIndex + 100;
@@ -94,7 +97,7 @@ public class QvxReader {
 			}
 			System.out.println(value);
 		}
-	}
+	}*/
 	
 	private BufferedDataTable dataToDataTable() {
 		
@@ -151,6 +154,7 @@ public class QvxReader {
 		 * zero-byte
 		 */
 		
+		System.out.println("readQvxTableHeader()");
 		FileInputStream inputStream = null;
 		try {
 			// Read the entire "inFileName" into a byte[] buffer
@@ -202,17 +206,36 @@ public class QvxReader {
 		/* Reads the body of the qvx file and populates "data"
 		 */
 		
+		System.out.println("readBody()");
+		boolean usesSeparatorByte = qvxTableHeader.isUsesSeparatorByte();
+		int endOfRecords = usesSeparatorByte ? buffer.length - 1 : buffer.length;
+		
 		int numFields = qvxTableHeader.getFields().getQvxFieldHeader().size();
 		bufferIndex = zeroByteIndex + 1; //Starting index of the body
-		while(bufferIndex < buffer.length) { //Keep reading until the end of the body is reached
+		while(bufferIndex < endOfRecords) { //Keep reading until the end of the body is reached
 			Object[] row = new Object[numFields];
-			for(int i = 0; i < numFields; i++) { //Read each field
-				QvxFieldHeader fieldHeader = qvxTableHeader.getFields().getQvxFieldHeader().get(i);			
+			
+			//Check for record separator byte if required
+			if (usesSeparatorByte) {
+				if (readBytesFromBuffer(1)[0] != RS_BYTE) {
+					throw new RuntimeException("Record separator byte is expected");
+				}
+			}
+			
+			//Read each field in the row
+			for(int i = 0; i < numFields; i++) {
+				QvxFieldHeader fieldHeader = qvxTableHeader.getFields().getQvxFieldHeader().get(i);
 				row[i] = readValueFromBuffer(fieldHeader);
 			}
 			data.add(row);
 		}
-			
+		
+		//Check for file separator byte if required
+		if (usesSeparatorByte) {
+			if (readBytesFromBuffer(1)[0] != FS_BYTE) {
+				throw new RuntimeException("File separator byte is expected");
+			}
+		}		
 	}
 	
 	private Object readValueFromBuffer(QvxFieldHeader fieldHeader) {
@@ -245,10 +268,46 @@ public class QvxReader {
 				}
 			case QVX_TEXT:
 				return bufferToString_zeroTerminated();
+			case QVX_QV_DUAL:
+				if(fieldHeader.getExtent() == QvxFieldExtent.QVX_QV_SPECIAL) {
+					return readQvDualBytes();
+				}else {
+					throw new RuntimeException("Fields of type QVX_QV_DUAL must use field extent" +
+							"QVX_QV_SPECIAL");
+				}
 			default:
-				return null;
+				throw new RuntimeException("Unrecognized field type of " + fieldHeader.getType());
 		}
 	}
+	
+	private Object readQvDualBytes() {
+		
+		byte flag = readBytesFromBuffer(1)[0];
+		if (flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_NULL.getValue()) {
+			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_INT.getValue()) {
+			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE.getValue()){
+			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_STRING.getValue()) {
+			return bufferToString_zeroTerminated();
+		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_INT_AND_STRING.getValue()) {
+			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE_AND_STRING.getValue()) {
+			readBytesFromBuffer(8); //Skip the "double" part of this value; I am unsure what this
+			//double is even used for (I do not actually see it in the data table anywhere)
+			int oldBufferIndex = bufferIndex;
+			try {
+				return Double.parseDouble(bufferToString_zeroTerminated());
+			}catch(NumberFormatException e) { //If it is not a number
+				bufferIndex = oldBufferIndex;
+				return bufferToString_zeroTerminated();
+			}
+		}
+		
+		throw new RuntimeException("Unknown QvxQvSpecialFlag: " + flag);
+	}
+	
 	//Helper methods ------------------------------------
 	
 	private String byteArrayToString(byte[] bytes) {
