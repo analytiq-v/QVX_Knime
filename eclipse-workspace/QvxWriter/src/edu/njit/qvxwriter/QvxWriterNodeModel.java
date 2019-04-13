@@ -137,6 +137,7 @@ public class QvxWriterNodeModel extends NodeModel {
     	System.out.println("NodeModel: validateSettings()");
     	//TODO: Finish "validate" method and call it from here
     	validateFileName(settings);
+    	//TODO: Validate FieldAttrType
 
     }
     
@@ -178,6 +179,7 @@ public class QvxWriterNodeModel extends NodeModel {
     
     // Validation methods
     protected void validateFileName(NodeSettingsRO settings) throws InvalidSettingsException {
+    	
     	String fileName = settings.getString(CFGKEY_FILE_NAME);
     	String overwritePolicy = settings.getString(CFGKEY_OVERWRITE_POLICY);
     	

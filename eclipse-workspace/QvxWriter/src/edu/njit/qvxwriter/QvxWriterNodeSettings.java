@@ -4,6 +4,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
+import edu.njit.qvx.FieldAttrType;
+
 public class QvxWriterNodeSettings {
 
 	 /** the settings key which is used to retrieve and 
@@ -43,34 +45,45 @@ public class QvxWriterNodeSettings {
 	static final String CFGKEY_FILE_NAME = "fileName";
 	static final String CFGKEY_OVERWRITE_POLICY = "overwritePolicy";
 	static final String CFGKEY_IS_BIG_ENDIAN = "isBigEndian";
+	static final String CFGKEY_USES_RECORD_SEPARATOR = "usesRecordSeparator";
 	
 	static final String CFGKEY_CUSTOM_TABLE_NAME = "customTableName";
 	static final String CFGKEY_DEFAULT_TABLE_NAME = "defaultTableName";
 	static final String CFGKEY_TABLE_NAME = "tableName";
 	static final String CFGKEY_USE_DEFAULT_TABLE_NAME = "useDefaultTableName";
 	
-	static final String CFGKEY_USES_RECORD_SEPARATOR = "usesRecordSeparator";	
+	
+	//TODO - Keep adding to this
+	static final String CFGKEY_SELECTED_FIELD_ATTRS = "selectedFieldAttrs";
+	static final String CFGKEY_SELECTED_N_DECS = "nDecs";
     
 	private String fileName;
 	private boolean isBigEndian;
 	private String overwritePolicy;
+	private boolean usesRecordSeparator;
 	
 	private String customTableName;
 	private String defaultTableName;
 	private String tableName;
 	private boolean useDefaultTableName;
 	
-	private boolean usesRecordSeparator;
+	//Each one of these arrays refers to a column in the FieldAttributesPanel
+	private String[] selectedFieldAttrs;
+	private int[] selectedNDecs;
 	
 	QvxWriterNodeSettings() {
-		fileName = null;
+		fileName = "";
 		isBigEndian = false;
-		overwritePolicy = null;
-		customTableName = null;
-		defaultTableName = null;
-		tableName = null;
+		overwritePolicy = "";
+		customTableName = "";
+		defaultTableName = "";
+		tableName = "";
 		useDefaultTableName = false;
 		usesRecordSeparator = false;
+		
+		//FieldAttrPanel settings
+		selectedFieldAttrs = null;
+		selectedNDecs = null;
 	}
 	
 	QvxWriterNodeSettings(NodeSettingsRO settings) throws InvalidSettingsException {
@@ -82,6 +95,10 @@ public class QvxWriterNodeSettings {
 		tableName = settings.getString(CFGKEY_TABLE_NAME);
 		useDefaultTableName = settings.getBoolean(CFGKEY_USE_DEFAULT_TABLE_NAME);
 		usesRecordSeparator = settings.getBoolean(CFGKEY_USES_RECORD_SEPARATOR);
+		
+		//FieldAttrPanel settings
+		selectedFieldAttrs = settings.getStringArray(CFGKEY_SELECTED_FIELD_ATTRS);
+		selectedNDecs = settings.getIntArray(CFGKEY_SELECTED_N_DECS);
 	}
 	
 	void saveSettingsTo(NodeSettingsWO settings) {
@@ -93,6 +110,10 @@ public class QvxWriterNodeSettings {
 		settings.addString(CFGKEY_TABLE_NAME, tableName);
 		settings.addBoolean(CFGKEY_USE_DEFAULT_TABLE_NAME, useDefaultTableName);
 		settings.addBoolean(CFGKEY_USES_RECORD_SEPARATOR, usesRecordSeparator);
+		
+		//FieldAttributesPanel settings
+		settings.addStringArray(CFGKEY_SELECTED_FIELD_ATTRS,  selectedFieldAttrs);
+		settings.addIntArray(CFGKEY_SELECTED_N_DECS, selectedNDecs);		
 	}
 	
 	String getFileName() {
@@ -127,6 +148,14 @@ public class QvxWriterNodeSettings {
 		return usesRecordSeparator;
 	}
 	
+	String[] getSelectedFieldAttrs() {
+		return selectedFieldAttrs;
+	}
+	
+	int[] getSelectedNDecs() {
+		return selectedNDecs;
+	}
+	
 	void setFileName(String fileName) {
 		this.fileName = fileName;
 	}
@@ -157,5 +186,13 @@ public class QvxWriterNodeSettings {
 	
 	void setUsesSeparatorByte(boolean usesSeparatorByte) {
 		this.usesRecordSeparator = usesSeparatorByte;
+	}
+	
+	void setSelectedFieldAttrs(String[] selectedFieldAttrs) {
+		this.selectedFieldAttrs = selectedFieldAttrs;
+	}
+	
+	void setSelectedNDecs(int[] selectedNDecs) {
+		this.selectedNDecs = selectedNDecs;
 	}
 }

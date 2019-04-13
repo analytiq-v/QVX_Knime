@@ -37,13 +37,9 @@ public class UIPrototype {
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 		mainPanel.setPreferredSize(new Dimension(1000,1000));
 
-		TableNamePanel panelA = new TableNamePanel();
-		TableNamePanel panelB = new TableNamePanel();
-		panelA.setPreferredSize(new Dimension(400, 400));
-		panelB.setPreferredSize(new Dimension(600, 400));
+		FieldAttrPanel panelA = new FieldAttrPanel();
 		
 		mainPanel.add(panelA);
-		mainPanel.add(panelB);
 		mainPanel.setVisible(true);
 		
 		frame.setContentPane(mainPanel);

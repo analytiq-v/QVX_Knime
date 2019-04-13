@@ -54,8 +54,8 @@ public class QvxWriter {
 	private static final byte FILE_SEPARATOR = 0x1C;
 	private static final byte NUL = 0x00;
 		
-	public void writeQvxFile(BufferedDataTable table, String outFileName, QvxWriterNodeSettings settings) 
-	{
+	public void writeQvxFile(BufferedDataTable table, String outFileName, QvxWriterNodeSettings settings) {
+		
 		this.table = table;
 		this.fieldNames = table.getSpec().getColumnNames();
 		this.data = dataTableToArray(this.table);
@@ -94,6 +94,9 @@ public class QvxWriter {
 	
 	private void configureTableHeaderFields() {
 				
+		//FieldAttributes fieldAttributes = new FieldAttributes();
+		//fieldAttributes.setFmt(FieldAttrType.DATE.toString());
+		//fieldHeader.setFieldFormat(fieldAttributes);
 		QvxTableHeader.Fields fields = new QvxTableHeader.Fields();
 		for(int i = 0; i < fieldNames.length; i++) {
 			
@@ -109,6 +112,9 @@ public class QvxWriter {
 			if (qvxFieldHeader.isBigEndian() == null) { //Uses little-endian by default
 				qvxFieldHeader.setBigEndian(false);
 			}
+			
+			setFieldAttributes(qvxFieldHeader, i);
+			
 			fields.getQvxFieldHeader().add(qvxFieldHeader);
 		}
 		tableHeader.setFields(fields);		
@@ -266,6 +272,34 @@ public class QvxWriter {
 		return i;
 	}
 	
+	private void setFieldAttributes(QvxFieldHeader fieldHeader, int columnIndex) {
+		
+		//TODO: Deal with "Interval" FieldAttrType
+		FieldAttributes fieldAttributes = new FieldAttributes();
+		FieldAttrType qvxAttr = FieldAttrType.fromValue(settings.getSelectedFieldAttrs()[columnIndex]);
+		fieldAttributes.setType(qvxAttr);
+		
+		if(qvxAttr.equals(FieldAttrType.UNKNOWN)) { //There is no additional formatting needed for "UNKNOWN" FieldAttrType
+			fieldHeader.setFieldFormat(fieldAttributes);
+			return;
+		}
+		
+		if(qvxAttr.equals(FieldAttrType.FIX) || qvxAttr.equals(FieldAttrType.REAL)) {
+			fieldAttributes.setNDec(BigInteger.valueOf(settings.getSelectedNDecs()[columnIndex]));
+		}
+		
+		String knimeType = table.getDataTableSpec().getColumnSpec(columnIndex).getType().getName();
+		if (knimeType.equals("Local Date Time")) {
+			fieldAttributes.setFmt("YYYY-MM-DD'T'HH:MM[:ss]");
+		}else if (knimeType.equals("Local Date")) {
+			fieldAttributes.setFmt("YYYY-MM-DD");
+		}else if (knimeType.equals("Local Time")) {
+			fieldAttributes.setFmt("HH:MM[:ss]");
+		}
+		
+	fieldHeader.setFieldFormat(fieldAttributes);
+	}
+
 	private void setFieldTypeAndByteWidth(QvxFieldHeader fieldHeader) {
 		
 		String fieldName = fieldHeader.getFieldName();
@@ -289,23 +323,14 @@ public class QvxWriter {
 				fieldHeader.setType(QvxFieldType.QVX_UNSIGNED_INTEGER);
 			}
 			fieldHeader.setByteWidth(BigInteger.valueOf(4));
-			
 		}else if (type.equals("Number (double)")) {
 			fieldHeader.setType(QvxFieldType.QVX_IEEE_REAL);
-			fieldHeader.setByteWidth(BigInteger.valueOf(8));
-			
-		}else if (type.equals("String")) {
+			fieldHeader.setByteWidth(BigInteger.valueOf(8));	
+		}else if (type.equals("String") || type.equals("Local Date Time") || type.equals("Local Date") || type.equals("Local Time")) {
 			fieldHeader.setType(QvxFieldType.QVX_TEXT);
 			fieldHeader.setByteWidth(BigInteger.valueOf(0));
-		}else if (type.equals("Local Date Time")){
-			fieldHeader.setType(QvxFieldType.QVX_TEXT);
-			fieldHeader.setByteWidth(BigInteger.valueOf(0));
-			
-			FieldAttributes fieldAttributes = new FieldAttributes();
-			fieldAttributes.setFmt(FieldAttrType.DATE.toString());
-			fieldHeader.setFieldFormat(fieldAttributes);;
 		}else {
-			throw new RuntimeException("Unrecognized KNIME type: " + type);
+			throw new RuntimeException("Coding error in QvxWriter.java: Unrecognized KNIME type: " + type);
 		}
 	}
 	
@@ -325,8 +350,8 @@ public class QvxWriter {
 			return bytes;
 		}else if (codePage == 1020 || codePage == 1021) { //UTF-16
 			//TODO
-			throw new IllegalStateException("Code not yet implemented");
+			throw new IllegalStateException("UTF-16 is not supported");
 		}
-		throw new IllegalStateException("Unrecognized code page");
+		throw new IllegalStateException("Code page " + codePage + " is not supported");
 	}
 }
