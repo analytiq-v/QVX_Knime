@@ -37,7 +37,7 @@ class TableNamePanel extends JPanel {
 	private String customName = "";
 	
 	TableNamePanel(){
-        //setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		
 		setLayout(new GridBagLayout());
         setBorder(new TitledBorder("Table Name"));
         
