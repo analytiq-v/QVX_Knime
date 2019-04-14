@@ -67,6 +67,8 @@ class AdvancedPanel extends JPanel {
 	
 	void loadValuesIntoPanel(final NodeSettingsRO settings) throws InvalidSettingsException {
 		
+		System.out.println("AdvancedPanel.loadValuesIntoPanel()");
+		
 		boolean isBigEndian = settings.getBoolean(QvxWriterNodeSettings.CFGKEY_IS_BIG_ENDIAN);
 		
 		boolean usesRecordSeparator = settings.getBoolean(

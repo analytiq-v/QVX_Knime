@@ -9,6 +9,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.io.File;
+import java.util.Arrays;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -65,6 +66,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 	private final JRadioButton overwritePolicy_overwriteButton;
 	
 	private final AdvancedPanel advancedPanel;
+	private final FieldAttrPanel fieldAttributesPanel;
 	//private final LimitRowsPanel limitRowsPanel;
 		
     protected QvxWriterNodeDialog() {
@@ -83,7 +85,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         filesPanel.add(filesHistoryPanel);
         
         tableNamePanel = new TableNamePanel();
-        
+                
         overwritePolicy_abortButton = new JRadioButton();
         overwritePolicy_overwriteButton = new JRadioButton();
         overwritePolicyPanel = radioPanel("If file exists...",
@@ -112,11 +114,13 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         advancedPanel = new AdvancedPanel();
         addTab("Advanced", advancedPanel);
         
+        fieldAttributesPanel = new FieldAttrPanel();
+        addTab("Field Attributes", fieldAttributesPanel);
+        
         //limitRowsPanel = new LimitRowsPanel(); TODO
         //addTab("Limit Rows", limitRowsPanel);
         
-        System.out.println("Settings dimension: " + settingsPanel.getPreferredSize());
-        
+        System.out.println("Settings dimension: " + settingsPanel.getPreferredSize());     
     }
     
 	@Override
@@ -138,6 +142,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 		m_settings.setOverwritePolicy(overwritePolicy);
 		
 		advancedPanel.saveSettingsInto(m_settings);
+		fieldAttributesPanel.saveSettingsInto(m_settings);
 		tableNamePanel.saveSettingsInto(m_settings);
 		
 		m_settings.saveSettingsTo(settings);
@@ -147,13 +152,17 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 	protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
 		
+		System.out.println(specs.length);
+		System.out.println(Arrays.toString(specs[0].getColumnNames()));
+		
 		System.out.println("NodeDialog: loadSettingsFrom()");
 		try {	
 			String fileName = settings.getString(QvxWriterNodeSettings.CFGKEY_FILE_NAME);
-			
+			System.out.println("loadSettingsFrom: fileName");
 			String overwritePolicy = settings.getString(
 					QvxWriterNodeSettings.CFGKEY_OVERWRITE_POLICY);			
-			
+			System.out.println("loadSettingsFrom: overwritePolicy");
+
 			//fileName
 			filesHistoryPanel.setSelectedFile(fileName);
 			
@@ -164,7 +173,9 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 				overwritePolicy_overwriteButton.setSelected(true);
 			}
 			
+			System.out.println("loadSettingsFrom: creating other panels");
 			advancedPanel.loadValuesIntoPanel(settings);
+			fieldAttributesPanel.loadValuesIntoPanel(settings, specs[0]);
 			tableNamePanel.loadValuesIntoPanel(settings);
 		} catch (InvalidSettingsException e) {
 			e.printStackTrace();

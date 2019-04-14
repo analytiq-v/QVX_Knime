@@ -1,9 +1,0 @@
-# 3/27/19 1:15:24 PM EDT
-# Eclipse Compiler for Java(TM) v20181130-1748, 3.16.0, Copyright IBM Corp 2000, 2015. All rights reserved.
-----------
-1. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 19)
-	import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
-	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded is never used
-----------
-1 problem (1 warning)
