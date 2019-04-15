@@ -1,28 +1,16 @@
 package edu.njit.qvxwriter;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.math.BigInteger;
 import java.util.Arrays;
 
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
-import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -30,9 +18,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 
 import edu.njit.qvx.FieldAttrType;
-import edu.njit.qvx.FieldAttributes;
-import edu.njit.qvx.QvxFieldType;
 
+import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_DATA_TABLE_COLUMNS;
 import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_SELECTED_FIELD_ATTRS;
 import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_SELECTED_N_DECS;
 
@@ -42,14 +29,19 @@ class FieldAttrPanel extends JPanel {
 	private JLabel fieldAttrHeader;
 	private JLabel nDecHeader;
 	private JLabel[] columnNameFields;
-	private JComboBox[] attributeSelects;
+	private JComboBox<String>[] attributeSelects;
 	private JSpinner[] nDecSpinners;
 				
 	FieldAttrPanel() {
-		//dfsdaf//TODO: Resolve "settings not saving" problem
+
 	}
 	
 	void saveSettingsInto(final QvxWriterNodeSettings settings) {
+		
+		String[] columnNames = new String[columnNameFields.length];
+		for(int i = 0; i < columnNames.length; i++) {
+			columnNames[i] = columnNameFields[i].getText();
+		}
 		
 		String[] selectedFieldAttrs = new String[attributeSelects.length];
 		for(int i = 0; i < selectedFieldAttrs.length; i++) {
@@ -63,6 +55,7 @@ class FieldAttrPanel extends JPanel {
 		}
 		System.out.println("saveSettingsInto: selectedNDecs: " + Arrays.toString(selectedNDecs));
 		
+		settings.setDataTableColumns(columnNames);
 		settings.setSelectedFieldAttrs(selectedFieldAttrs);
 		settings.setSelectedNDecs(selectedNDecs);
 	}
@@ -113,22 +106,29 @@ class FieldAttrPanel extends JPanel {
 		columnNameFields = new JLabel[numColumns];
 		attributeSelects = new JComboBox[numColumns];
 		nDecSpinners = new JSpinner[numColumns];		
-					
+		
+		//Column names from the data table that is currently on the in-port
+		String[] inColumnNames = new String[numColumns];
+		for(int i = 0; i < numColumns; i++) {
+			inColumnNames[i] = spec.getColumnSpec(i).getName();
+		}
+		String[] settingsColumnNames = settings.getStringArray(CFGKEY_DATA_TABLE_COLUMNS);
+		
 		for(int i = 0; i < numColumns; i++) {
 			DataColumnSpec columnSpec = spec.getColumnSpec(i);
+			String columnName = columnSpec.getName();
+			columnNameFields[i] = new JLabel(columnName);
+			attributeSelects[i] = new JComboBox<String>(getAllowedAttrTypes(columnSpec));
 			
-			columnNameFields[i] = new JLabel(columnSpec.getName());
-			attributeSelects[i] = new JComboBox(getAllowedAttrTypes(columnSpec));
-			nDecSpinners[i] = new JSpinner(new SpinnerNumberModel(nDecs != null ? nDecs[i] : 0, 0, Integer.MAX_VALUE, 1));
-
-			if (selectedFieldAttrs == null) {
-				System.out.println("selectedFieldAttrs is null******");
-				attributeSelects[i].setSelectedItem(getDefaultAttrType(columnSpec));	
-			}else {
-				System.out.println("selected field Attr!!!!" + selectedFieldAttrs[i]);
+			//If there have been no changes to input table since last QvxWriter configuration
+			if (settingsColumnNames != null && Arrays.equals(inColumnNames, settingsColumnNames)) {
 				attributeSelects[i].setSelectedItem(selectedFieldAttrs[i]);
+				nDecSpinners[i] = new JSpinner(new SpinnerNumberModel(nDecs[i], 0, Integer.MAX_VALUE, 1));
+			}else { //There have been changes; reload with defaults
+				attributeSelects[i].setSelectedItem(getDefaultAttrType(columnSpec));
+				nDecSpinners[i] = new JSpinner(new SpinnerNumberModel(0, 0, Integer.MAX_VALUE, 1));
 			}
-			
+		
 			gbc.weightx = COLUMN_NAME_WEIGHT_X;
 			gbc.gridy += 1;
 			gbc.gridx = 0;

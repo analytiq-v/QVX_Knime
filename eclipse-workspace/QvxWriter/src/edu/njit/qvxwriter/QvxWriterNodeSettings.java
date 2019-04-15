@@ -52,8 +52,7 @@ public class QvxWriterNodeSettings {
 	static final String CFGKEY_TABLE_NAME = "tableName";
 	static final String CFGKEY_USE_DEFAULT_TABLE_NAME = "useDefaultTableName";
 	
-	
-	//TODO - Keep adding to this
+	static final String CFGKEY_DATA_TABLE_COLUMNS = "dataTableColumns";
 	static final String CFGKEY_SELECTED_FIELD_ATTRS = "selectedFieldAttrs";
 	static final String CFGKEY_SELECTED_N_DECS = "nDecs";
     
@@ -68,6 +67,7 @@ public class QvxWriterNodeSettings {
 	private boolean useDefaultTableName;
 	
 	//Each one of these arrays refers to a column in the FieldAttributesPanel
+	private String[] dataTableColumns;
 	private String[] selectedFieldAttrs;
 	private int[] selectedNDecs;
 	
@@ -78,10 +78,11 @@ public class QvxWriterNodeSettings {
 		customTableName = "";
 		defaultTableName = "";
 		tableName = "";
-		useDefaultTableName = false;
+		useDefaultTableName = true;
 		usesRecordSeparator = false;
 		
 		//FieldAttrPanel settings
+		dataTableColumns = null;
 		selectedFieldAttrs = null;
 		selectedNDecs = null;
 	}
@@ -97,6 +98,7 @@ public class QvxWriterNodeSettings {
 		usesRecordSeparator = settings.getBoolean(CFGKEY_USES_RECORD_SEPARATOR);
 		
 		//FieldAttrPanel settings
+		dataTableColumns = settings.getStringArray(CFGKEY_DATA_TABLE_COLUMNS);
 		selectedFieldAttrs = settings.getStringArray(CFGKEY_SELECTED_FIELD_ATTRS);
 		selectedNDecs = settings.getIntArray(CFGKEY_SELECTED_N_DECS);
 	}
@@ -112,6 +114,7 @@ public class QvxWriterNodeSettings {
 		settings.addBoolean(CFGKEY_USES_RECORD_SEPARATOR, usesRecordSeparator);
 		
 		//FieldAttributesPanel settings
+		settings.addStringArray(CFGKEY_DATA_TABLE_COLUMNS, dataTableColumns);
 		settings.addStringArray(CFGKEY_SELECTED_FIELD_ATTRS,  selectedFieldAttrs);
 		settings.addIntArray(CFGKEY_SELECTED_N_DECS, selectedNDecs);		
 	}
@@ -146,6 +149,10 @@ public class QvxWriterNodeSettings {
 	
 	boolean getUsesSeparatorByte() {
 		return usesRecordSeparator;
+	}
+	
+	String[] getDataTableColumns() {
+		return dataTableColumns;
 	}
 	
 	String[] getSelectedFieldAttrs() {
@@ -186,6 +193,10 @@ public class QvxWriterNodeSettings {
 	
 	void setUsesSeparatorByte(boolean usesSeparatorByte) {
 		this.usesRecordSeparator = usesSeparatorByte;
+	}
+	
+	void setDataTableColumns(String[] dataTableColumns) {
+		this.dataTableColumns = dataTableColumns;
 	}
 	
 	void setSelectedFieldAttrs(String[] selectedFieldAttrs) {
