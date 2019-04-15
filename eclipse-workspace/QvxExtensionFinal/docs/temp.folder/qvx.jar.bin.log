@@ -1,0 +1,308 @@
+# 4/10/19 3:26:29 PM EDT
+# Eclipse Compiler for Java(TM) v20190306-2240, 3.17.0, Copyright IBM Corp 2000, 2015. All rights reserved.
+----------
+1. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxDataCellFactory.java (at line 14)
+	import org.knime.core.data.def.IntCell;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.def.IntCell is never used
+----------
+2. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxDataCellFactory.java (at line 15)
+	import org.knime.core.data.def.StringCell;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.def.StringCell is never used
+----------
+----------
+3. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileReaderException.java (at line 15)
+	public class QvxFileReaderException extends RuntimeException {
+	             ^^^^^^^^^^^^^^^^^^^^^^
+The serializable class QvxFileReaderException does not declare a static final serialVersionUID field of type long
+----------
+----------
+4. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileReaderNodeSettings.java (at line 212)
+	private static final String CFGKEY_TABLENAME = "TableName";
+	                            ^^^^^^^^^^^^^^^^
+The value of the field QvxFileReaderNodeSettings.CFGKEY_TABLENAME is not used
+----------
+----------
+5. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 6)
+	import java.util.NoSuchElementException;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import java.util.NoSuchElementException is never used
+----------
+6. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 10)
+	import org.knime.core.data.DataColumnSpec;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.DataColumnSpec is never used
+----------
+7. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 64)
+	private static final long PROGRESS_JUNK_SIZE = 1024 * 512;
+	                          ^^^^^^^^^^^^^^^^^^
+The value of the field QvxFileRowIterator.PROGRESS_JUNK_SIZE is not used
+----------
+8. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 67)
+	private boolean m_exceptionThrown;
+	                ^^^^^^^^^^^^^^^^^
+The value of the field QvxFileRowIterator.m_exceptionThrown is not used
+----------
+9. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 70)
+	private final long m_maxNumOfRows;
+	                   ^^^^^^^^^^^^^^
+The value of the field QvxFileRowIterator.m_maxNumOfRows is not used
+----------
+10. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 80)
+	private ExecutionContext m_exec;
+	                         ^^^^^^
+The value of the field QvxFileRowIterator.m_exec is not used
+----------
+11. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 83)
+	private long m_lastReport;
+	             ^^^^^^^^^^^^
+The value of the field QvxFileRowIterator.m_lastReport is not used
+----------
+12. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 219)
+	boolean result;
+	        ^^^^^^
+The value of the local variable result is not used
+----------
+13. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 281)
+	String token = null;
+	       ^^^^^
+The value of the local variable token is not used
+----------
+14. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 282)
+	boolean isMissingCell;
+	        ^^^^^^^^^^^^^
+The value of the local variable isMissingCell is not used
+----------
+15. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 296)
+	for(DataCell datacell:row) {
+	             ^^^^^^^^
+The value of the local variable datacell is not used
+----------
+16. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxFileRowIterator.java (at line 518)
+	private DataCell createNewDataCellOfType(final DataType type,
+            final String data, final boolean createMissingCell,
+            final String formatParameter,
+            final String rowHeader, final DataCell[] row) {
+	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The method createNewDataCellOfType(DataType, String, boolean, String, String, DataCell[]) from the type QvxFileRowIterator is never used locally
+----------
+----------
+17. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 9)
+	import org.knime.base.node.io.filereader.FileAnalyzer;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.base.node.io.filereader.FileAnalyzer is never used
+----------
+18. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 10)
+	import org.knime.base.node.io.filereader.FileReaderExecutionMonitor;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.base.node.io.filereader.FileReaderExecutionMonitor is never used
+----------
+19. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 11)
+	import org.knime.base.node.io.filereader.FileReaderNodeSettings;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.base.node.io.filereader.FileReaderNodeSettings is never used
+----------
+20. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 12)
+	import org.knime.base.node.io.filereader.FileTable;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.base.node.io.filereader.FileTable is never used
+----------
+21. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 13)
+	import org.knime.core.data.DataCell;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.DataCell is never used
+----------
+22. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 15)
+	import org.knime.core.data.DataColumnSpecCreator;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.DataColumnSpecCreator is never used
+----------
+23. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 16)
+	import org.knime.core.data.DataRow;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.DataRow is never used
+----------
+24. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 18)
+	import org.knime.core.data.RowKey;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.RowKey is never used
+----------
+25. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 19)
+	import org.knime.core.data.def.DefaultRow;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.def.DefaultRow is never used
+----------
+26. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 20)
+	import org.knime.core.data.def.DoubleCell;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.def.DoubleCell is never used
+----------
+27. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 21)
+	import org.knime.core.data.def.IntCell;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.def.IntCell is never used
+----------
+28. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 22)
+	import org.knime.core.data.def.StringCell;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.data.def.StringCell is never used
+----------
+29. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 23)
+	import org.knime.core.node.BufferedDataContainer;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.node.BufferedDataContainer is never used
+----------
+30. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 26)
+	import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded is never used
+----------
+31. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 29)
+	import org.knime.core.node.workflow.NodeProgress;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.node.workflow.NodeProgress is never used
+----------
+32. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 30)
+	import org.knime.core.node.workflow.NodeProgressEvent;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.node.workflow.NodeProgressEvent is never used
+----------
+33. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 31)
+	import org.knime.core.node.workflow.NodeProgressListener;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import org.knime.core.node.workflow.NodeProgressListener is never used
+----------
+34. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 56)
+	private static final NodeLogger logger = NodeLogger
+	                                ^^^^^^
+The value of the field QvxNodeModel.logger is not used
+----------
+35. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 105)
+	URL url = FileUtil.toURL(m_string.getStringValue());
+	    ^^^
+The value of the local variable url is not used
+----------
+36. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 109)
+	QvxTableHeader qvxTableHeader = qvxReader.getTableHeader();
+	               ^^^^^^^^^^^^^^
+The value of the local variable qvxTableHeader is not used
+----------
+37. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/nodes/qvx/QvxNodeModel.java (at line 118)
+	final ExecutionMonitor analyseExec = exec.createSubProgress(0.5);
+	                       ^^^^^^^^^^^
+The value of the local variable analyseExec is not used
+----------
+----------
+38. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/PartialXmlEventReader.java (at line 10)
+	private boolean skip = false;
+	                ^^^^
+The value of the field PartialXmlEventReader.skip is not used
+----------
+----------
+39. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXBinaryReader.java (at line 4)
+	import java.io.BufferedReader;
+	       ^^^^^^^^^^^^^^^^^^^^^^
+The import java.io.BufferedReader is never used
+----------
+40. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXBinaryReader.java (at line 10)
+	import java.io.Reader;
+	       ^^^^^^^^^^^^^^
+The import java.io.Reader is never used
+----------
+41. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXBinaryReader.java (at line 11)
+	import java.sql.Date;
+	       ^^^^^^^^^^^^^
+The import java.sql.Date is never used
+----------
+42. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXBinaryReader.java (at line 13)
+	import javax.xml.bind.JAXBException;
+	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The import javax.xml.bind.JAXBException is never used
+----------
+43. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXBinaryReader.java (at line 23)
+	private Object extractQvxData(byte[] qvxTableData) {
+	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The method extractQvxData(byte[]) from the type QVXBinaryReader is never used locally
+----------
+44. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXBinaryReader.java (at line 29)
+	BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+	                    ^^^^^^^^^^^^^^^^^^^
+Resource leak: 'bufferedInputStream' is never closed
+----------
+45. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXBinaryReader.java (at line 34)
+	int readDataSize = bufferedInputStream.read(byteArray);
+	    ^^^^^^^^^^^^
+The value of the local variable readDataSize is not used
+----------
+46. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXBinaryReader.java (at line 38)
+	private  Object [] getTableObjects () throws IOException, ClassNotFoundException {
+	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The method getTableObjects() from the type QVXBinaryReader is never used locally
+----------
+47. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXBinaryReader.java (at line 40)
+	ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+	                  ^^^^^^^^^^^^^^^^^
+Resource leak: 'objectInputStream' is never closed
+----------
+----------
+48. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 41)
+	private String filepath = null;
+	               ^^^^^^^^
+The value of the field QVXReader.filepath is not used
+----------
+49. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 101)
+	for(String colDataText :(List<String>)rowDataText) {
+	                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+Type safety: Unchecked cast from Object to List<String>
+----------
+50. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 148)
+	for(QvxFieldHeader qvxFieldHeader:qvxFieldHeaderList) {
+	                   ^^^^^^^^^^^^^^
+The value of the local variable qvxFieldHeader is not used
+----------
+51. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 153)
+	int index = 0;
+	    ^^^^^
+The value of the local variable index is not used
+----------
+52. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 172)
+	switch(qvxFieldAttrType) {
+	       ^^^^^^^^^^^^^^^^
+The enum constant DATE needs a corresponding case label in this enum switch on FieldAttrType
+----------
+53. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 172)
+	switch(qvxFieldAttrType) {
+	       ^^^^^^^^^^^^^^^^
+The enum constant FIX needs a corresponding case label in this enum switch on FieldAttrType
+----------
+54. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 172)
+	switch(qvxFieldAttrType) {
+	       ^^^^^^^^^^^^^^^^
+The enum constant INTERVAL needs a corresponding case label in this enum switch on FieldAttrType
+----------
+55. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 172)
+	switch(qvxFieldAttrType) {
+	       ^^^^^^^^^^^^^^^^
+The enum constant TIME needs a corresponding case label in this enum switch on FieldAttrType
+----------
+56. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 198)
+	private DataColumnDomain convertQvxToNodeDataDomain(QvxFieldHeader qvxFieldHeader) {
+	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The method convertQvxToNodeDataDomain(QvxTableHeader.Fields.QvxFieldHeader) from the type QVXReader is never used locally
+----------
+57. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 208)
+	for(QvxFieldHeader qvxFieldHeader:qvxFieldHeaderList) {
+	                   ^^^^^^^^^^^^^^
+The value of the local variable qvxFieldHeader is not used
+----------
+58. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 281)
+	if (cvsLine == null && cvsLine.isEmpty()) {
+	                       ^^^^^^^
+Null pointer access: The variable cvsLine can only be null at this location
+----------
+59. WARNING in /Users/bsangam/eclipse-workspace/QvxExtension/src/edu/njit/knime/adapter/qvx/QVXReader.java (at line 391)
+	List<List<String>>  qvxData = null;
+	                    ^^^^^^^
+The value of the local variable qvxData is not used
+----------
