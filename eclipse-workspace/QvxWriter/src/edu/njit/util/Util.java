@@ -10,6 +10,17 @@ public class Util {
     	}
     }
 	
+	public static byte[] combineByteArrays(byte[] a, byte[] b) {
+		byte[] returnValue = new byte[a.length + b.length];
+		for(int i = 0; i < a.length; i++) {
+			returnValue[i] = a[i];
+		}
+		for(int i = 0; i < b.length; i++) {
+			returnValue[a.length + i] = b[i];
+		}
+		return returnValue;
+	}
+	
 	public static String removeSuffix(String s, String suffix) {
 		if (s.endsWith(suffix)) {
 			return s.substring(0, s.lastIndexOf(suffix));

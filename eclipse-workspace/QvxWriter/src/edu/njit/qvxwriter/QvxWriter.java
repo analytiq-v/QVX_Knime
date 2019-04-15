@@ -34,7 +34,9 @@ import edu.njit.qvx.QvxTableHeader;
 import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 import edu.njit.util.Util;
 
-import static edu.njit.util.Util.checkNotNull;
+import static edu.njit.qvx.QvxNullRepresentation.QVX_NULL_FLAG_SUPPRESS_DATA;
+import static edu.njit.qvx.QvxNullRepresentation.QVX_NULL_NEVER;
+import static edu.njit.util.Util.combineByteArrays;
 import static edu.njit.util.Util.removeSuffix;
 
 public class QvxWriter {
@@ -106,7 +108,7 @@ public class QvxWriter {
 			qvxFieldHeader.setFieldName(fieldNames[i]);
 			setFieldTypeAndByteWidth(qvxFieldHeader);
 			qvxFieldHeader.setExtent(determineExtent(qvxFieldHeader));
-			qvxFieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
+			qvxFieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_FLAG_SUPPRESS_DATA);
 			
 			qvxFieldHeader.setBigEndian(settings.getIsBigEndian());
 			if (qvxFieldHeader.isBigEndian() == null) { //Uses little-endian by default
@@ -150,9 +152,24 @@ public class QvxWriter {
 			
 			for(int j = 0; j < data[i].length; j++) {
 				
+				byte[] byteValue = null;
+				
 				//"fieldHeader" is the fieldHeader for the column that is being accessed
 				QvxTableHeader.Fields.QvxFieldHeader fieldHeader = tableHeader.getFields().getQvxFieldHeader().get(j);
-				byte[] byteValue = convertToByteValue(fieldHeader, data[i][j]);
+				if (fieldHeader.getNullRepresentation().equals(QVX_NULL_FLAG_SUPPRESS_DATA)) {
+					byte nullFlag = getNullFlagSuppressDataByte(fieldHeader, data[i][j]);
+					if (nullFlag == 1) {
+						byteValue = new byte[] {nullFlag};
+					}else {
+						byteValue = combineByteArrays(
+							new byte[] {nullFlag}, convertToByteValue(fieldHeader, data[i][j]));
+					}
+				}else if (fieldHeader.getNullRepresentation().equals(QVX_NULL_NEVER)) {
+					byteValue = convertToByteValue(fieldHeader, data[i][j]);
+				}else {
+					throw new RuntimeException("Unrecognized or unimplemented null representation: "
+						+ fieldHeader.getNullRepresentation());
+				}
 				
 				//Write "byteValue" to buffer
 				int prevBufferIndex = bufferIndex; //Necessary for dealing with buffer overflow
@@ -186,7 +203,7 @@ public class QvxWriter {
 	//Helper methods --------------------------------------------------
 	
 	private byte[] convertToByteValue(QvxFieldHeader fieldHeader, String s) {
-					
+		
 		int byteWidth = fieldHeader.getByteWidth().intValue();
 		ByteBuffer byteBuffer = null;
 		switch (fieldHeader.getType()) {
@@ -228,11 +245,11 @@ public class QvxWriter {
         	DataRow row = iterator.next();
         	for(int columnIndex = 0; columnIndex < numColumns; columnIndex++) {        		
         		DataCell cell = row.getCell(columnIndex);
-        		String value = cell.toString();
-        		if (value.equals("?") &&
-        			!table.getSpec().getColumnSpec(columnIndex).getName().equals("String"))
-        		{
-        			value = "0"; //TODO: Value should actually be set to null; needs refactoring
+        		String value;
+        		if (cell.isMissing()) { //Empty value
+        			value = "";
+        		}else {
+        			value = cell.toString();
         		}
         		arr[rowIndex][columnIndex] = value;
         	}
@@ -248,6 +265,17 @@ public class QvxWriter {
 		}else {
 			return QvxFieldExtent.QVX_FIX;
 		}
+	}
+	
+	private byte getNullFlagSuppressDataByte(QvxFieldHeader fieldHeader, String s) {
+		
+		byte nullFlag = (byte)0;
+		if (!fieldHeader.getType().equals(QvxFieldType.QVX_TEXT)) {
+			if (s.toString().equals("")) {
+				nullFlag = (byte)1;
+			}
+		}
+		return nullFlag;
 	}
 	
 	private static int insertInto(byte[] target, byte value, int offset) {
