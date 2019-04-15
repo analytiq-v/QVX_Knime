@@ -1,0 +1,52 @@
+
+{
+    "version":"3.5.3.v201804031105",
+    "created":"2019-04-13 17:07",
+    "nodestats":{
+        "nodes":[
+            {
+                "id":"edu.njit.knime.adapter.nodes.qvx.QvxNodeFactory#Qvx",
+                "nrexecs":4,
+                "nrfails":1,
+                "exectime":7577,
+                "nrcreated":1,
+                "successor":"org.knime.base.node.viz.table.TableNodeFactory#Interactive Table"
+            },
+            {
+                "id":"org.knime.base.node.viz.table.TableNodeFactory#Interactive Table",
+                "nrexecs":13,
+                "nrfails":0,
+                "exectime":39,
+                "nrcreated":4,
+                "successor":"n/a"
+            },
+            {
+                "id":"edu.njit.knime.adapter.nodes.qvx.QvxNodeFactory#QvxNodeAdapter",
+                "nrexecs":0,
+                "nrfails":0,
+                "exectime":0,
+                "nrcreated":1,
+                "successor":"n/a"
+            },
+            {
+                "id":"edu.njit.knime.adapter.nodes.qvx.QvxNodeFactory#Qvx Reader",
+                "nrexecs":9,
+                "nrfails":2,
+                "exectime":17649,
+                "nrcreated":3,
+                "successor":"org.knime.base.node.viz.table.TableNodeFactory#Interactive Table"
+            }
+        ],
+        "metaNodes":{
+        },
+        "wrappedNodes":{
+        }
+    },
+    "uptime":211813,
+    "workflowsOpened":1,
+    "remoteWorkflowsOpened":0,
+    "launches":7,
+    "timeSinceLastStart":660497,
+    "crashes":0,
+    "properlyShutDown":true
+}

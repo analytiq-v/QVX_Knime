@@ -1,0 +1,9 @@
+{
+	"handle": 1,
+	"method": "GetIncludeFileContent",
+	"params": {
+		"qPath": "lib://CONNECTION/LoadAndStoreText.txt"
+	},
+	"outKey": -1,
+	"id": 21
+}
