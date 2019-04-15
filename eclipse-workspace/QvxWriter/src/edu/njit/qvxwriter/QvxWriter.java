@@ -75,6 +75,7 @@ public class QvxWriter {
 	}
 	
 	private void configureTableHeader() {
+		
 		tableHeader = new QvxTableHeader();
 		
     	tableHeader.setMajorVersion(BigInteger.valueOf(1));
