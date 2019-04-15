@@ -1,4 +1,4 @@
-Cust_ID,ZIP,expected_duration,actual_duration,Job_ID,Technician_ID,Advisor_ID,Date_of_job,Time_of_job,Outlet_code,Channel_code
+﻿Cust_ID,ZIP,expected_duration,actual_duration,Job_ID,Technician_ID,Advisor_ID,Date_of_job,Time_of_job,Outlet_code,Channel_code
 C_1,06467,9,14,5,121,44,2017-01-06,14:20:28,4,103
 C_1,06467,12,14,18,69,10,2016-12-27,11:34:14,4,103
 C_1,06467,12,14,18,69,10,2017-05-11,11:34:14,4,103

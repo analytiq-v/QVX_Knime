@@ -1,4 +1,4 @@
-Date_of_acquisition,Cust_ID,ZIP,LAT,LNG,Acq_channel
+﻿Date_of_acquisition,Cust_ID,ZIP,LAT,LNG,Acq_channel
 2016-11-11,C_1,19104,39.95852,-75.198857,2
 2016-01-26,C_39,11103,40.762574,-73.913447,1
 2018-03-30,C_72,07620,40.968725,-73.916999,4

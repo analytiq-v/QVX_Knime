@@ -1,0 +1,1 @@
+data:LOAD COLUMN_LIST FROM [lib://CONNECTION/FILENAME.qvx] (qvx);store data into [lib://CONNECTION/FILENAME.csv] (txt);

@@ -1,4 +1,4 @@
-Household_number,Date_of_occupancy,Ownership,Mortgage_Or_Rent,Dwelling_type,House_value_in_K,House_hold_size,Household_income_in_K,House_size,No_of_vehicles,ZIP,LAT,LNG
+﻿Household_number,Date_of_occupancy,Ownership,Mortgage_Or_Rent,Dwelling_type,House_value_in_K,House_hold_size,Household_income_in_K,House_size,No_of_vehicles,ZIP,LAT,LNG
 H6,2018-09-02,false,2471.604211419724,Apartments,735.6728408218919,3,129.20583703764078,1167.5196167190131,4,19104,39.95852,-75.198857
 H11,2018-12-23,false,2468.5178062598343,Apartments,268.5681153381511,2,163.22844514616816,660.8301421475893,1,11103,40.762574,-73.913447
 H19,2017-05-25,false,2473.6171040325385,Single Family,692.1677157898807,5,167.47501613848235,2212.149183599019,2,07620,40.968725,-73.916999
