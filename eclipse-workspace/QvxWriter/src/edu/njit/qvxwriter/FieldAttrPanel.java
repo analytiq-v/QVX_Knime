@@ -9,6 +9,7 @@ import java.util.Arrays;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
@@ -146,7 +147,7 @@ class FieldAttrPanel extends JPanel {
 			gbc.weightx = FILLER_WEIGHT_X; //Fill the remaining space
 			gbc.gridx += 1;
 			add(new JPanel(), gbc);
-		}
+		}		
 	}
 	
 	String[] getAllowedAttrTypes(DataColumnSpec spec) {

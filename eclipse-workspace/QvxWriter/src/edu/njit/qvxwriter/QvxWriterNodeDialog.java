@@ -18,6 +18,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -115,7 +116,9 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         addTab("Advanced", advancedPanel);
         
         fieldAttributesPanel = new FieldAttrPanel();
-        addTab("Field Attributes", fieldAttributesPanel);
+        JScrollPane scrollPane = new JScrollPane(fieldAttributesPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        addTab("Field Attributes", scrollPane);
         
         //limitRowsPanel = new LimitRowsPanel(); TODO
         //addTab("Limit Rows", limitRowsPanel);
