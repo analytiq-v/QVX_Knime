@@ -1,7 +1,0 @@
-/Users/monicasangam/eclipse-workspace/QvxExtension 5/docs/Feedback.qvx
-/Users/monicasangam/eclipse-workspace/QvxExtension 5/docs/job.qvx
-/Users/monicasangam/eclipse-workspace/QvxExtension 5/docs/Household.qvx
-/Users/monicasangam/eclipse-workspace/QvxExtension 5/docs/Customer.qvx
-/Users/monicasangam/eclipse-workspace/QvxExtension 5/docs/Products.qvx
-/Users/monicasangam/eclipse-workspace/QvxExtension 5/docs/NYSE.qvx
-/Users/monicasangam/eclipse-workspace/QvxExtension 5/docs/products.qvx

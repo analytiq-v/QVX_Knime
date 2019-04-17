@@ -1,9 +1,0 @@
-{
-	"handle": 1,
-	"method": "SetScript",
-	"params": {
-		"qScript": "data:LOAD COLUMN_LIST FROM [lib://CONNECTION/FILENAME.qvx] (qvx);store data into [lib://CONNECTION/FILENAME.csv] (txt);
-	},
-	"outKey": -1,
-	"id": 22
-}
