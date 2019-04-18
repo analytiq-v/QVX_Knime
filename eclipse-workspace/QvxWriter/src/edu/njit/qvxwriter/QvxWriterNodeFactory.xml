@@ -3,35 +3,84 @@
     <name>QvxWriter</name>
     
     <shortDescription>
-        
+        Reads a data table from the input port and produces a qvx file.
     </shortDescription>
     
     <fullDescription>
-        <intro>Insert long description here...</intro>
+        <intro>
+        	<p>
+        	Writes qvx files. Upon executing, the node will read the data table on the in-port. The node
+        	will write the appropriate table header information header information for the qvx file,
+        	and then write the data portion of the qvx file based on the data table.
+		  	</p>
+        </intro>
         
-        
-        <option name="short name of first option (like in the dialog)">description of first option</option>
-        <option name="short name of second option (like in the dialog)">description of second option</option>
-        <!-- possibly more options that can also be grouped by tabs -->
-        <!--
-        <tab name="Standard Options">
-            <option name="short name of first option (like in the dialog)">description of first option</option>
-            <option name="short name of second option (like in the dialog)">description of second option</option>
-        </tab>
-        <tab name="Advanced Options">
-            <option name="short name of first advanced option (like in the dialog)">description of first advanced option</option>
-        </tab>
-        -->
-    </fullDescription>
-    
-    <ports>
-        <inPort index="0" name="In-Port name">Description of first input port...</inPort>
-        <!-- possibly more input ports here-->
-        <outPort index="0" name="Out-Port name">Description of first output port...</outPort>
-        <!-- possibly more output ports here-->
-    </ports>    
-    <views>
-        <view index="0" name="name of first view">Description of first view...</view>
-        <!--view index="1" name="name of second view">Description of second view...</view-->
+        <tab name="Settings">
+        	<option name="Output Location">
+        	Enter a valid file name, or select a file from the "Browse" dialog.
+        	The supported file format is .qvx.
+        	</option>
+        	
+        	<option name="Table name">
+        	Table name of the qvx file.
+        	</option>
+        	
+        	<option name="If file exists...">
+        	Decide whether an existing file should be overwritten on execution, or if execution should
+        	be aborted.
+        	</option>
+    	</tab>
+    	
+    	<tab name="Field Attributes">
+    		<option name="Column Name">
+    		Name of the column of the input data table, which will also be the name of the corresponding
+    		column in the qvx file.
+    		</option>
+    		
+    		<option name="Field Attribute">
+    		Specifies how QlikView should interpret the data values in the qvx file.
+    		</option>
+    		
+    		<option name="# Decimals">
+    		For the Field Attribute of "FIX", specifies number of decimal places. For the Field Attribute
+    		of "REAL", specifies the number of significant digits.
+    		</option>
+    	</tab>
+    	
+    	<tab name="Advanced">
+    		<option name="Record Separator">
+    		Specifies if a record separator byte should be written before each record.
+    		</option>
+    		
+    		<option name="Endianness">
+    		Specifies the byte-order of the numerical data values within the qvx file.
+    		</option>
+    	</tab>
+	</fullDescription>
+       
+	<ports>
+		<inPort index="0" name="Data Table">
+		Data table that will be used to generate the qvx file.
+		</inPort>
+	</ports>
+	
+	<!-- Node description does not conform to the schema; however, this could be good information if
+	it could somehow be added to the Node description
+	<views>
+    	<view name="Settings">
+    	Choose where the qvx file will be saved and set whether or not an existing qvx file should be
+    	overwritten.
+    	</view>
+    	
+    	<view name="Field Attributes">
+    	Field Attributes specify how QlikView would interpret the data in the output qvx file. For instance,
+    	decimal values can be interpeted as money.
+    	</view>
+    	
+    	<view name="Advanced">
+    	Toggle settings that affect the structure of the data in the output qvx file. These settings
+    	have no effect on the actual data values that are stored in the qvx file.
+    	</view> 	
     </views>
+    -->
 </knimeNode>

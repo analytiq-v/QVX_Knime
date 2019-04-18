@@ -4,10 +4,12 @@ import edu.njit.qvxwriter.QvxWriterNodeSettings.Endianness;
 import edu.njit.qvxwriter.QvxWriterNodeSettings.OverwritePolicy;
 import javafx.beans.value.ObservableValue;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.io.File;
 import java.util.Arrays;
 
@@ -70,9 +72,12 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 	private final FieldAttrPanel fieldAttributesPanel;
 	//private final LimitRowsPanel limitRowsPanel;
 		
+	private final double SCREEN_WIDTH = Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+	private final double SCREEN_HEIGHT = Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+	
     protected QvxWriterNodeDialog() {
         super();
-                
+            
         // Settings panel
         settingsPanel = new JPanel();
         settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
@@ -117,7 +122,8 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         
         fieldAttributesPanel = new FieldAttrPanel();
         JScrollPane scrollPane = new JScrollPane(fieldAttributesPanel);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setPreferredSize(new Dimension((int)(SCREEN_WIDTH/5), (int)(SCREEN_HEIGHT/5)));
         addTab("Field Attributes", scrollPane);
         
         //limitRowsPanel = new LimitRowsPanel(); TODO
