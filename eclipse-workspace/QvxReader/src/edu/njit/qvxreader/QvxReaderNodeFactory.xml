@@ -3,35 +3,38 @@
     <name>QvxReader</name>
     
     <shortDescription>
-        
+        Reads qvx files and produce a data table on the output port.
     </shortDescription>
     
     <fullDescription>
-        <intro>Insert long description here...</intro>
+        <intro>
+        	<p>
+        	Reads qvx files. Upon executing, the node will read the table header information to
+		  	determine number and types of the columns and output a table containing the data
+		  	from the data portion of the qvx file.
+		  	</p>
+        </intro>
         
-        
-        <option name="short name of first option (like in the dialog)">description of first option</option>
-        <option name="short name of second option (like in the dialog)">description of second option</option>
-        <!-- possibly more options that can also be grouped by tabs -->
-        <!--
-        <tab name="Standard Options">
-            <option name="short name of first option (like in the dialog)">description of first option</option>
-            <option name="short name of second option (like in the dialog)">description of second option</option>
-        </tab>
-        <tab name="Advanced Options">
-            <option name="short name of first advanced option (like in the dialog)">description of first advanced option</option>
-        </tab>
-        -->
-    </fullDescription>
+        <tab name="Settings">
+        	<option name="Input Location">
+        	Enter a valid file name, or select a file from the "Browse" dialog.
+        	The supported file format is .qvx.
+        	</option>
+    	</tab>
+	</fullDescription>
     
-    <ports>
-        <inPort index="0" name="In-Port name">Description of first input port...</inPort>
-        <!-- possibly more input ports here-->
-        <outPort index="0" name="Out-Port name">Description of first output port...</outPort>
-        <!-- possibly more output ports here-->
-    </ports>    
+    <!-- Node description does not conform to the schema; however, this could be good information if
+	it could somehow be added to the Node description
     <views>
-        <view index="0" name="name of first view">Description of first view...</view>
-        <!--view index="1" name="name of second view">Description of second view...</view-->
+    	<view name="Settings">
+    	Choose the qvx file that will be read.
+    	</view>
     </views>
+    -->
+      
+	<ports>
+		<outPort index="0" name="File Table">
+		Data table, with number and types of columns determined by the input file's table header.
+		</outPort>
+	</ports>
 </knimeNode>
