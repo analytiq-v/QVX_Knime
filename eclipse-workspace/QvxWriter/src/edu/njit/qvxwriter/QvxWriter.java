@@ -190,10 +190,11 @@ public class QvxWriter {
 				//update bufferIndex automatically (rather than using bufferIndex = insertInto())
 			}
 		}
+		
 		try { //Write any characters that are still in the buffer to the outputStream
 			outputStream.write(Arrays.copyOfRange(buffer, 0, bufferIndex));		
 			if (tableHeader.isUsesSeparatorByte()) {
-				bufferIndex = insertInto(buffer, FILE_SEPARATOR, bufferIndex);
+				outputStream.write(FILE_SEPARATOR);
 			}
 			outputStream.close();
 		}catch(IOException e) {
