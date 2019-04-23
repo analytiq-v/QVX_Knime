@@ -1,6 +1,7 @@
 package edu.njit.qvxwriter;
 
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -9,7 +10,6 @@ import java.util.Arrays;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
@@ -26,6 +26,7 @@ import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_SELECTED_N_DECS;
 
 class FieldAttrPanel extends JPanel {
 
+	private static final Font COLUMN_HEADER_FONT = new Font("Times New Roman", Font.BOLD, 15);
 	private JLabel columnNameHeader;
 	private JLabel fieldAttrHeader;
 	private JLabel nDecHeader;
@@ -79,6 +80,9 @@ class FieldAttrPanel extends JPanel {
 		columnNameHeader = new JLabel("Column Name");
 		fieldAttrHeader = new JLabel("Field Attribute");
 		nDecHeader = new JLabel("# Decimals");
+		columnNameHeader.setFont(COLUMN_HEADER_FONT);
+		fieldAttrHeader.setFont(COLUMN_HEADER_FONT);
+		nDecHeader.setFont(COLUMN_HEADER_FONT);
 				
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.insets = new Insets(10, 30, 0, 0);

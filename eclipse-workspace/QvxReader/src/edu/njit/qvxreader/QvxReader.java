@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -29,11 +30,19 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 
+import edu.njit.qvx.FieldAttrType;
 import edu.njit.qvx.QvxFieldExtent;
+import edu.njit.qvx.QvxFieldType;
 import edu.njit.qvx.QvxNullRepresentation;
 import edu.njit.qvx.QvxQvSpecialFlag;
 import edu.njit.qvx.QvxTableHeader;
 import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
+
+import static edu.njit.qvx.FieldAttrType.FIX;
+import static edu.njit.qvx.FieldAttrType.MONEY;
+import static edu.njit.qvx.FieldAttrType.REAL;
+import static edu.njit.qvx.QvxFieldType.QVX_SIGNED_INTEGER;
+import static edu.njit.qvx.QvxFieldType.QVX_UNSIGNED_INTEGER;
 
 public class QvxReader {
 
@@ -41,6 +50,7 @@ public class QvxReader {
 	private final byte RS_BYTE = 0x1E;
 	
 	private QvxTableHeader qvxTableHeader;
+	private List<QvxFieldHeader> fieldHeaders;
 	private String inFileName;
 	private ExecutionContext exec;
 	private String[] fieldNames;
@@ -60,10 +70,7 @@ public class QvxReader {
 		this.inFileName = settings.getFileName();
 		this.exec = exec;
 		
-		System.out.println("reading from qvx table header");
 		readQvxTableHeader();
-		//printBody();
-		//return null;
 		readBody();
 		
 		System.out.println(Arrays.toString(fieldNames));
@@ -76,6 +83,7 @@ public class QvxReader {
 	
 	private BufferedDataTable dataToDataTable() {
 		
+		System.out.println("Converting to data table...");
 		int numRows = data.size();
 		int numCols = data.get(0).length;
 		
@@ -96,10 +104,10 @@ public class QvxReader {
 			
 			//Get the type of dataPt and create the appropriate cell type
 			Class dataClass = dataPt.getClass();
-			if (dataClass.equals(java.lang.Integer.class)){
-				dataTypes[i] = IntCell.TYPE;
-			}else if(dataClass.equals(java.lang.Double.class)) {
+			if(dataClass.equals(java.lang.Double.class) || usesFixedPointDecimals(fieldHeaders.get(i))) {
 				dataTypes[i] = DoubleCell.TYPE;
+			}else if(dataClass.equals(java.lang.Integer.class)){
+				dataTypes[i] = IntCell.TYPE;
 			}else if(dataClass.equals(java.lang.String.class)) {
 				dataTypes[i] = StringCell.TYPE;
 			}else {
@@ -144,6 +152,8 @@ public class QvxReader {
 		 * zero-byte
 		 */
 		
+		System.out.println("reading from qvx table header...");
+
 		FileInputStream inputStream = null;
 		try {
 			// Read the entire "inFileName" into a byte[] buffer
@@ -176,8 +186,7 @@ public class QvxReader {
 					new StreamSource(new StringReader(xmlString)));
 			
 			//Add field names to "data"
-			List<QvxTableHeader.Fields.QvxFieldHeader> fieldHeaders =
-					qvxTableHeader.getFields().getQvxFieldHeader();
+			fieldHeaders = qvxTableHeader.getFields().getQvxFieldHeader();
 			fieldNames = new String[fieldHeaders.size()];
 			for(int i = 0; i < fieldHeaders.size(); i++) {
 				fieldNames[i] = fieldHeaders.get(i).getFieldName();
@@ -194,6 +203,8 @@ public class QvxReader {
 		
 		/* Reads the body of the qvx file and populates "data"
 		 */
+		
+		System.out.println("reading from body...");
 		
 		boolean usesSeparatorByte = qvxTableHeader.isUsesSeparatorByte();
 		int endOfRecords = usesSeparatorByte ? buffer.length - 1 : buffer.length;
@@ -220,10 +231,10 @@ public class QvxReader {
 					byte nullFlag = readBytesFromBuffer(1)[0];
 					if (nullFlag == 0) {
 						row[i] = readValueFromBuffer(fieldHeader);
-					}else if (nullFlag == 1) {
+						System.out.println("value: " + row[i]);
+					}else if (nullFlag == 1) { //Null flag of 1 means a field value is not used
 						System.out.println("null value found");
 						row[i] = null;
-						//This significies "null"; a field value is not used
 					}else {
 						throw new RuntimeException("Unrecognized QVX_NULL_FLAG_SUPPRESS_DATA flag: " +
 								nullFlag);
@@ -249,17 +260,22 @@ public class QvxReader {
 	
 	private Object readValueFromBuffer(QvxFieldHeader fieldHeader) {
 		
+		System.out.println("reading value from buffer...");
+		
 		int byteWidth = fieldHeader.getByteWidth().intValue();
 		ByteOrder byteOrder = fieldHeader.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+		
 		switch (fieldHeader.getType()) {
 			case QVX_BLOB:
 				//TODO
 				return null;
 			case QVX_IEEE_REAL:
 				if (byteWidth == 4) {
-					return ByteBuffer.wrap(readBytesFromBuffer(4)).order(byteOrder).getFloat();
+					Float f = ByteBuffer.wrap(readBytesFromBuffer(4)).order(byteOrder).getFloat();
+					return (float)applyFieldAttr(f, fieldHeader);
 				}else if(byteWidth == 8) {
-					return ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getDouble();
+					Double d = ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getDouble();
+					return applyFieldAttr(d, fieldHeader);
 				}
 			case QVX_PACKED_BCD:
 				//TODO
@@ -269,17 +285,21 @@ public class QvxReader {
 				if (byteWidth == 1) {
 					// TODO
 				}else if(byteWidth == 2) {
-					return ByteBuffer.wrap(readBytesFromBuffer(2)).order(byteOrder).getShort();
+					short s = ByteBuffer.wrap(readBytesFromBuffer(2)).order(byteOrder).getShort();
+					return (short)applyFieldAttr(s, fieldHeader);
 				}else if(byteWidth == 4) {
-					return ByteBuffer.wrap(readBytesFromBuffer(4)).order(byteOrder).getInt();
+					int i = ByteBuffer.wrap(readBytesFromBuffer(4)).order(byteOrder).getInt();
+					return applyFieldAttr(i, fieldHeader);
 				}else if(byteWidth == 8) {
-					return ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getLong();
+					long l = ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getLong();
+					return (long)applyFieldAttr(l, fieldHeader);
 				}
 			case QVX_TEXT:
 				return bufferToString_zeroTerminated();
 			case QVX_QV_DUAL:
 				if(fieldHeader.getExtent() == QvxFieldExtent.QVX_QV_SPECIAL) {
-					return readQvDualBytes();
+					Object value = readQvDualBytes();
+					return applyFieldAttr(value, fieldHeader);
 				}else {
 					throw new RuntimeException("Fields of type QVX_QV_DUAL must use field extent" +
 							"QVX_QV_SPECIAL");
@@ -359,5 +379,57 @@ public class QvxReader {
 			s += (char)b;
 		}
 		return s;
+	}
+	
+	private Object applyFieldAttr(Object data, QvxFieldHeader fieldHeader) {
+		
+		System.out.println("applying field formatting...");
+		
+		Object returnVal;
+		//Debugging code
+		QvxFieldType type = fieldHeader.getType();
+		System.out.print("Type: " + type);
+		
+		//If there is no formatting for this field, return the original data
+		if (fieldHeader.getFieldFormat() == null || fieldHeader.getFieldFormat().getType() == null) {
+			System.out.println(", Format: None");
+			returnVal = data;
+		}else {	
+			FieldAttrType fieldAttrType = fieldHeader.getFieldFormat().getType();
+			System.out.println(", Format: " + fieldAttrType);
+			
+			if (fieldAttrType == FIX || fieldAttrType == REAL) {
+				
+				int nDec = 0; //nDec is 0 if not specified
+				if (fieldHeader.getFieldFormat().getNDec() != null) {
+					nDec = fieldHeader.getFieldFormat().getNDec().intValue();
+				}
+				returnVal = Math.round((double)data * Math.pow(10, nDec))/Math.pow(10, nDec);
+			}else if (fieldAttrType == MONEY) {
+				returnVal = Math.round((double)data * 100.0) / 100.0;
+			}else {
+				returnVal = data;
+			}
+		}
+		
+		//Apply fixPointDecimals if it has a non-zero integer value
+		QvxFieldType fieldType = fieldHeader.getType();
+		if (fieldType == QVX_SIGNED_INTEGER || fieldType == QVX_UNSIGNED_INTEGER) {
+			if (usesFixedPointDecimals(fieldHeader)) {
+				if (returnVal.getClass().equals(java.lang.Integer.class)) {
+					int fixPointDecimals = fieldHeader.getFixPointDecimals().intValue();
+					System.out.println("integer with fixed pt found");
+					double dReturnVal = Double.parseDouble(Integer.toString((int)returnVal));
+					System.out.println("converted to double");
+					return dReturnVal / Math.pow(10.0, fixPointDecimals);
+				}
+			}
+		}
+		return returnVal;
+	}
+	
+	private boolean usesFixedPointDecimals(QvxFieldHeader fieldHeader) {
+		BigInteger fixPointDecimals = fieldHeader.getFixPointDecimals();
+		return fixPointDecimals != null && fixPointDecimals.intValue() != 0;
 	}
 }

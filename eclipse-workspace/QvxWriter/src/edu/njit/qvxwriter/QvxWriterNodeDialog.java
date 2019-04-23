@@ -1,23 +1,13 @@
 package edu.njit.qvxwriter;
 
-import edu.njit.qvxwriter.QvxWriterNodeSettings.Endianness;
-import edu.njit.qvxwriter.QvxWriterNodeSettings.OverwritePolicy;
-import javafx.beans.value.ObservableValue;
-
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.Toolkit;
 import java.io.File;
 import java.util.Arrays;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -36,10 +26,8 @@ import org.knime.core.node.util.FilesHistoryPanel;
 import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
 import org.knime.core.node.workflow.FlowVariable;
 
-import edu.njit.qvx.QvxTableHeader;
-import edu.njit.qvxwriter.QvxWriter;
+import edu.njit.qvxwriter.QvxWriterNodeSettings.OverwritePolicy;
 
-import static edu.njit.util.Component.radioPanel;
 import static edu.njit.util.Util.removeSuffix;
 import static edu.njit.util.Util.toTitleCase;
 
@@ -91,14 +79,20 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         filesPanel.add(filesHistoryPanel);
         
         tableNamePanel = new TableNamePanel();
-                
+         
+        overwritePolicyPanel = new JPanel();
+        overwritePolicyPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        overwritePolicyPanel.setBorder(new TitledBorder("If file exists..."));
         overwritePolicy_abortButton = new JRadioButton();
+        overwritePolicy_abortButton.setText(OverwritePolicy.ABORT.toString());
         overwritePolicy_overwriteButton = new JRadioButton();
-        overwritePolicyPanel = radioPanel("If file exists...",
-        	new String[] {OverwritePolicy.ABORT.toString(), OverwritePolicy.OVERWRITE.toString()},
-        	overwritePolicy_abortButton, overwritePolicy_overwriteButton
-        );
+        overwritePolicy_overwriteButton.setText(OverwritePolicy.OVERWRITE.toString());
         overwritePolicy_abortButton.setSelected(true);
+        ButtonGroup group = new ButtonGroup();
+        group.add(overwritePolicy_abortButton);
+        group.add(overwritePolicy_overwriteButton);
+        overwritePolicyPanel.add(overwritePolicy_abortButton);
+        overwritePolicyPanel.add(overwritePolicy_overwriteButton);
         
         filesHistoryPanel.addChangeListener(new ChangeListener() {
         	@Override
@@ -125,10 +119,7 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setPreferredSize(new Dimension((int)(SCREEN_WIDTH/5), (int)(SCREEN_HEIGHT/5)));
         addTab("Field Attributes", scrollPane);
-        
-        //limitRowsPanel = new LimitRowsPanel(); TODO
-        //addTab("Limit Rows", limitRowsPanel);
-        
+                
         System.out.println("Settings dimension: " + settingsPanel.getPreferredSize());     
     }
     
