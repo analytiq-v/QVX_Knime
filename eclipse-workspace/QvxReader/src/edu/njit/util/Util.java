@@ -9,8 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Util {
 	
-	public static final int HOUR_NULL = -1; //Signifies that the "Calendar" refers to date, not dateTime
 	public static SimpleDateFormat dateFormat = new SimpleDateFormat("MM dd yyyy");
+	public static long SECONDS_PER_DAY = 86400;
 	public static long MILLISECONDS_PER_DAY = 86400000;
 	static Date EPOCH;
 	static Date START_DATE;
@@ -45,17 +45,16 @@ public class Util {
 	
 	public static Calendar getDateFromQvxReal(double daysSince) {
 		
+		long fullDaysSince = Math.round(daysSince);
+		double partialDaysSince = daysSince - fullDaysSince;
+		long remainingSeconds = Math.round(partialDaysSince*SECONDS_PER_DAY);
+		
 		long dateInMilliseconds = (START_DATE.getTime()-EPOCH.getTime()) +
-				(long)daysSince*MILLISECONDS_PER_DAY;
+				(long)(fullDaysSince*MILLISECONDS_PER_DAY) +
+				(long)(remainingSeconds*1000);
 		Date date = new Date(dateInMilliseconds);
 		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
 		calendar.setTime(date);
-		int month = calendar.get(Calendar.MONTH);
-		int day = calendar.get(Calendar.DAY_OF_MONTH) + 1;
-		int year = calendar.get(Calendar.YEAR);
-		calendar.set(year, month, day);
-		calendar.set(Calendar.HOUR, HOUR_NULL);
-		
 		return calendar;
 	}
 	

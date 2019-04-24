@@ -34,6 +34,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 
 import edu.njit.qvx.FieldAttrType;
+import edu.njit.qvx.FieldAttributes;
 import edu.njit.qvx.QvxFieldExtent;
 import edu.njit.qvx.QvxFieldType;
 import edu.njit.qvx.QvxNullRepresentation;
@@ -43,8 +44,11 @@ import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 
 import static edu.njit.qvx.FieldAttrType.DATE;
 import static edu.njit.qvx.FieldAttrType.FIX;
+import static edu.njit.qvx.FieldAttrType.INTERVAL;
 import static edu.njit.qvx.FieldAttrType.MONEY;
 import static edu.njit.qvx.FieldAttrType.REAL;
+import static edu.njit.qvx.FieldAttrType.TIME;
+import static edu.njit.qvx.FieldAttrType.TIMESTAMP;
 import static edu.njit.qvx.QvxFieldType.QVX_QV_DUAL;
 import static edu.njit.qvx.QvxFieldType.QVX_SIGNED_INTEGER;
 import static edu.njit.qvx.QvxFieldType.QVX_UNSIGNED_INTEGER;
@@ -94,6 +98,16 @@ public class QvxReader {
 		int numCols = data.get(0).length;
 		
 		DataType[] dataTypes = new DataType[fieldNames.length];
+		
+		//Cache the FieldAttrType for each field
+		FieldAttrType[] fieldAttrTypes = new FieldAttrType[fieldHeaders.size()];
+		for(int i = 0; i < fieldHeaders.size(); i++) {
+			FieldAttributes fieldFormat = fieldHeaders.get(i).getFieldFormat();
+			if (fieldFormat != null) {
+				fieldAttrTypes[i] = fieldFormat.getType();
+			}
+		}
+		
 		for(int i = 0; i < fieldNames.length; i++) {
 			
 			//Get the first non-null value in data
@@ -144,8 +158,8 @@ public class QvxReader {
 		    		cells[j] = new StringCell((String)dataPt);
 		    	}else if(dataClass.equals(java.util.GregorianCalendar.class)){
 		    		Calendar cal = (Calendar)dataPt;
-		    		cells[j] = new DateAndTimeCell(
-		    			cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+		    		System.out.println("Calendar: " + cal.getTime());
+		    		cells[j] = getCorrectDateAndTimeCell(cal, fieldAttrTypes[j]);
 				}else {
 					throw new RuntimeException("Unknown data type: " + dataClass);
 
@@ -335,6 +349,7 @@ public class QvxReader {
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE.getValue()){
 			ByteOrder byteOrder = fieldHeader.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
 			Object value = ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getDouble();
+			System.out.println("qvx_qv_special_double: original value: " + value);
 			return applyFieldAttr(value, fieldHeader);
 			
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_STRING.getValue()) {
@@ -442,13 +457,14 @@ public class QvxReader {
 					return data;
 				}
 				returnVal = Math.round((double)data * 100.0) / 100.0;
-			}else if (fieldAttrType == DATE) {
+			}else if (fieldAttrType == DATE || fieldAttrType == INTERVAL || fieldAttrType == TIME
+					|| fieldAttrType == TIMESTAMP ) {
 				
 				if (type == QVX_QV_DUAL) {
 					System.out.println("Qvx Dual date: " + data);
 					Calendar cal = getDateFromQvxReal((double)data);
 					System.out.println("Calendar: " + cal.getTime());
-					return getDateFromQvxReal((double)data);
+					return cal;
 				}else {
 					throw new RuntimeException("Unimplemented QvxFieldType-FieldAttrType combination: " +
 							type + ", " + fieldAttrType);
@@ -464,9 +480,9 @@ public class QvxReader {
 			if (usesFixedPointDecimals(fieldHeader)) {
 				if (returnVal.getClass().equals(java.lang.Integer.class)) {
 					int fixPointDecimals = fieldHeader.getFixPointDecimals().intValue();
-					//System.out.println("integer with fixed pt found");
+					System.out.println("integer with fixed pt found");
 					double dReturnVal = Double.parseDouble(Integer.toString((int)returnVal));
-					//System.out.println("converted to double");
+					System.out.println("converted to double");
 					return dReturnVal / Math.pow(10.0, fixPointDecimals);
 				}
 			}
@@ -477,5 +493,26 @@ public class QvxReader {
 	private boolean usesFixedPointDecimals(QvxFieldHeader fieldHeader) {
 		BigInteger fixPointDecimals = fieldHeader.getFixPointDecimals();
 		return fixPointDecimals != null && fixPointDecimals.intValue() != 0;
+	}
+	
+	private DateAndTimeCell getCorrectDateAndTimeCell(Calendar cal, FieldAttrType fieldAttrType) {
+		
+		switch (fieldAttrType) {
+		case DATE:
+			System.out.println("Type is date");
+			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
+					cal.get(Calendar.DAY_OF_MONTH));
+		case TIMESTAMP:
+			System.out.println("Type is timestamp");
+			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
+					cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
+					cal.get(Calendar.SECOND));
+		case INTERVAL:
+			System.out.println("Type is interval");
+			return new DateAndTimeCell(cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
+					cal.get(Calendar.SECOND), cal.get(Calendar.MILLISECOND));
+		default:
+			throw new RuntimeException("Unimplemented field attribute type: " + fieldAttrType);
+		}
 	}
 }
