@@ -10,6 +10,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -26,11 +28,13 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 
 import edu.njit.qvx.FieldAttrType;
+import edu.njit.qvx.FieldAttributes;
 import edu.njit.qvx.QvxFieldExtent;
 import edu.njit.qvx.QvxFieldType;
 import edu.njit.qvx.QvxNullRepresentation;
@@ -38,11 +42,17 @@ import edu.njit.qvx.QvxQvSpecialFlag;
 import edu.njit.qvx.QvxTableHeader;
 import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 
+import static edu.njit.qvx.FieldAttrType.DATE;
 import static edu.njit.qvx.FieldAttrType.FIX;
+import static edu.njit.qvx.FieldAttrType.INTERVAL;
 import static edu.njit.qvx.FieldAttrType.MONEY;
 import static edu.njit.qvx.FieldAttrType.REAL;
+import static edu.njit.qvx.FieldAttrType.TIME;
+import static edu.njit.qvx.FieldAttrType.TIMESTAMP;
+import static edu.njit.qvx.QvxFieldType.QVX_QV_DUAL;
 import static edu.njit.qvx.QvxFieldType.QVX_SIGNED_INTEGER;
 import static edu.njit.qvx.QvxFieldType.QVX_UNSIGNED_INTEGER;
+import static edu.njit.util.Util.getDateFromQvxReal;
 
 public class QvxReader {
 
@@ -88,6 +98,16 @@ public class QvxReader {
 		int numCols = data.get(0).length;
 		
 		DataType[] dataTypes = new DataType[fieldNames.length];
+		
+		//Cache the FieldAttrType for each field
+		FieldAttrType[] fieldAttrTypes = new FieldAttrType[fieldHeaders.size()];
+		for(int i = 0; i < fieldHeaders.size(); i++) {
+			FieldAttributes fieldFormat = fieldHeaders.get(i).getFieldFormat();
+			if (fieldFormat != null) {
+				fieldAttrTypes[i] = fieldFormat.getType();
+			}
+		}
+		
 		for(int i = 0; i < fieldNames.length; i++) {
 			
 			//Get the first non-null value in data
@@ -110,8 +130,11 @@ public class QvxReader {
 				dataTypes[i] = IntCell.TYPE;
 			}else if(dataClass.equals(java.lang.String.class)) {
 				dataTypes[i] = StringCell.TYPE;
+			}else if(dataClass.equals(java.util.GregorianCalendar.class)){
+				//Check if it is date/date-time
+				dataTypes[i] = DateAndTimeCell.TYPE;
 			}else {
-				throw new RuntimeException("Unknown data type");
+				throw new RuntimeException("Unknown data type: " + dataClass);
 			}
 		}
 		
@@ -133,8 +156,13 @@ public class QvxReader {
 		    		cells[j] = new DoubleCell((double)dataPt);
 		    	}else if(dataClass.equals(java.lang.String.class)) {
 		    		cells[j] = new StringCell((String)dataPt);
-		    	}else {
-					throw new RuntimeException("Unknown data type");
+		    	}else if(dataClass.equals(java.util.GregorianCalendar.class)){
+		    		Calendar cal = (Calendar)dataPt;
+		    		System.out.println("Calendar: " + cal.getTime());
+		    		cells[j] = getCorrectDateAndTimeCell(cal, fieldAttrTypes[j]);
+				}else {
+					throw new RuntimeException("Unknown data type: " + dataClass);
+
 				}
 		    }
 		    DataRow row = new DefaultRow("RowKey_" + i, cells);
@@ -231,7 +259,7 @@ public class QvxReader {
 					byte nullFlag = readBytesFromBuffer(1)[0];
 					if (nullFlag == 0) {
 						row[i] = readValueFromBuffer(fieldHeader);
-						System.out.println("value: " + row[i]);
+						//System.out.println("value: " + row[i]);
 					}else if (nullFlag == 1) { //Null flag of 1 means a field value is not used
 						System.out.println("null value found");
 						row[i] = null;
@@ -242,6 +270,7 @@ public class QvxReader {
 					break;
 				case QVX_NULL_NEVER:
 					row[i] = readValueFromBuffer(fieldHeader);
+					System.out.println("value: " + row[i]);
 					break;
 				default:
 					throw new RuntimeException("Unrecognized null representation: " + nullRepresentation);
@@ -298,8 +327,7 @@ public class QvxReader {
 				return bufferToString_zeroTerminated();
 			case QVX_QV_DUAL:
 				if(fieldHeader.getExtent() == QvxFieldExtent.QVX_QV_SPECIAL) {
-					Object value = readQvDualBytes();
-					return applyFieldAttr(value, fieldHeader);
+					return readQvDualBytes(fieldHeader);
 				}else {
 					throw new RuntimeException("Fields of type QVX_QV_DUAL must use field extent" +
 							"QVX_QV_SPECIAL");
@@ -309,28 +337,35 @@ public class QvxReader {
 		}
 	}
 	
-	private Object readQvDualBytes() {
+	private Object readQvDualBytes(QvxFieldHeader fieldHeader) {
 		
 		byte flag = readBytesFromBuffer(1)[0];
 		if (flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_NULL.getValue()) {
 			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+			
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_INT.getValue()) {
 			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+			
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE.getValue()){
-			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+			ByteOrder byteOrder = fieldHeader.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+			Object value = ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getDouble();
+			System.out.println("qvx_qv_special_double: original value: " + value);
+			return applyFieldAttr(value, fieldHeader);
+			
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_STRING.getValue()) {
-			return bufferToString_zeroTerminated();
+			return applyFieldAttr(bufferToString_zeroTerminated(), fieldHeader);
+			
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_INT_AND_STRING.getValue()) {
 			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+			
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE_AND_STRING.getValue()) {
-			readBytesFromBuffer(8); //Skip the "double" part of this value; I am unsure what this
-			//double is even used for (I do not actually see it in the data table anywhere)
+			readBytesFromBuffer(8); //Skip the "double" part of this value; it is not used
 			int oldBufferIndex = bufferIndex;
 			try {
-				return Double.parseDouble(bufferToString_zeroTerminated());
+				return applyFieldAttr(Double.parseDouble(bufferToString_zeroTerminated()), fieldHeader);
 			}catch(NumberFormatException e) { //If it is not a number
 				bufferIndex = oldBufferIndex;
-				return bufferToString_zeroTerminated();
+				return applyFieldAttr(bufferToString_zeroTerminated(), fieldHeader);
 			}
 		}
 		
@@ -383,9 +418,9 @@ public class QvxReader {
 	
 	private Object applyFieldAttr(Object data, QvxFieldHeader fieldHeader) {
 		
-		System.out.println("applying field formatting...");
+		//System.out.println("applying field formatting...");
 		
-		Object returnVal;
+		Object returnVal = null;
 		//Debugging code
 		QvxFieldType type = fieldHeader.getType();
 		System.out.print("Type: " + type);
@@ -400,13 +435,42 @@ public class QvxReader {
 			
 			if (fieldAttrType == FIX || fieldAttrType == REAL) {
 				
+				try {
+					data = (double)data;
+				}catch(ClassCastException e) {
+					//Type of REAL/FIX/MONEY does not necessarily mean data is a number
+					return data;
+				}
+				
 				int nDec = 0; //nDec is 0 if not specified
 				if (fieldHeader.getFieldFormat().getNDec() != null) {
 					nDec = fieldHeader.getFieldFormat().getNDec().intValue();
 				}
 				returnVal = Math.round((double)data * Math.pow(10, nDec))/Math.pow(10, nDec);
+				
 			}else if (fieldAttrType == MONEY) {
+				
+				try {
+					data = (double)data;
+				}catch(ClassCastException e) {
+					//Type of REAL/FIX/MONEY does not necessarily mean data is a number
+					return data;
+				}
 				returnVal = Math.round((double)data * 100.0) / 100.0;
+			}else if (fieldAttrType == DATE || fieldAttrType == INTERVAL || fieldAttrType == TIME
+					|| fieldAttrType == TIMESTAMP ) {
+				
+				if (type == QVX_QV_DUAL) {
+					System.out.println("Qvx Dual date: " + data);
+					Calendar cal = getDateFromQvxReal((double)data);
+					System.out.println("Calendar: " + cal.getTime());
+					return cal;
+				}else {
+					System.out.println("WARNING: Unimplemented QvxFieldType-FieldAttrType combination: " +
+							type + ", " + fieldAttrType + "; This field will not be stored as a " +
+							fieldAttrType);
+					return data;
+				}
 			}else {
 				returnVal = data;
 			}
@@ -431,5 +495,26 @@ public class QvxReader {
 	private boolean usesFixedPointDecimals(QvxFieldHeader fieldHeader) {
 		BigInteger fixPointDecimals = fieldHeader.getFixPointDecimals();
 		return fixPointDecimals != null && fixPointDecimals.intValue() != 0;
+	}
+	
+	private DateAndTimeCell getCorrectDateAndTimeCell(Calendar cal, FieldAttrType fieldAttrType) {
+		
+		switch (fieldAttrType) {
+		case DATE:
+			System.out.println("Type is date");
+			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
+					cal.get(Calendar.DAY_OF_MONTH));
+		case TIMESTAMP:
+			System.out.println("Type is timestamp");
+			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
+					cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
+					cal.get(Calendar.SECOND));
+		case INTERVAL:
+			System.out.println("Type is interval");
+			return new DateAndTimeCell(cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
+					cal.get(Calendar.SECOND), cal.get(Calendar.MILLISECOND));
+		default:
+			throw new RuntimeException("Unimplemented field attribute type: " + fieldAttrType);
+		}
 	}
 }

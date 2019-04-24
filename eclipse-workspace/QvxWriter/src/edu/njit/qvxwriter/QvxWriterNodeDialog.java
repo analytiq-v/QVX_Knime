@@ -154,6 +154,9 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 		
 		System.out.println(specs.length);
 		System.out.println(Arrays.toString(specs[0].getColumnNames()));
+		for(int i = 0; i < specs[0].getNumColumns(); i++)
+			System.out.println("Data type: " + specs[0].getColumnSpec(i).getType().getCellClass());
+
 		
 		System.out.println("NodeDialog: loadSettingsFrom()");
 		try {	

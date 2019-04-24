@@ -30,13 +30,19 @@ import edu.njit.qvx.FieldAttributes;
 import edu.njit.qvx.QvxFieldExtent;
 import edu.njit.qvx.QvxFieldType;
 import edu.njit.qvx.QvxNullRepresentation;
+import edu.njit.qvx.QvxQvSpecialFlag;
 import edu.njit.qvx.QvxTableHeader;
 import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
-import edu.njit.util.Util;
 
+import static edu.njit.qvx.FieldAttrType.DATE;
+import static edu.njit.qvx.FieldAttrType.INTERVAL;
+import static edu.njit.qvx.FieldAttrType.TIME;
+import static edu.njit.qvx.FieldAttrType.TIMESTAMP;
 import static edu.njit.qvx.QvxNullRepresentation.QVX_NULL_FLAG_SUPPRESS_DATA;
 import static edu.njit.qvx.QvxNullRepresentation.QVX_NULL_NEVER;
 import static edu.njit.util.Util.combineByteArrays;
+import static edu.njit.util.Util.dateToDaysSince;
+import static edu.njit.util.Util.timeToDaysSince;
 import static edu.njit.util.Util.removeSuffix;
 
 public class QvxWriter {
@@ -96,10 +102,7 @@ public class QvxWriter {
     }
 	
 	private void configureTableHeaderFields() {
-				
-		//FieldAttributes fieldAttributes = new FieldAttributes();
-		//fieldAttributes.setFmt(FieldAttrType.DATE.toString());
-		//fieldHeader.setFieldFormat(fieldAttributes);
+		
 		QvxTableHeader.Fields fields = new QvxTableHeader.Fields();
 		for(int i = 0; i < fieldNames.length; i++) {
 			
@@ -185,9 +188,6 @@ public class QvxWriter {
 					}				
 					bufferIndex = insertInto(buffer, byteValue, 0);
 				}
-				//TODO: Write a method that incorporates "insertInto", and writing to outfile immediately
-				// if it detects overflow (ie. the code right above this comment; also, insertInto should
-				//update bufferIndex automatically (rather than using bufferIndex = insertInto())
 			}
 		}
 		
@@ -228,6 +228,15 @@ public class QvxWriter {
 					byteBuffer.putDouble(Double.parseDouble(s));
 				}
 				return byteBuffer.array();
+			case QVX_QV_DUAL:
+				//Only used for writing dates/intervals/time/timestamps
+				byteBuffer = ByteBuffer.allocate(8);
+				byteBuffer.order(fieldHeader.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
+				byteBuffer.putDouble(dateTimeToDouble(fieldHeader, s));
+				return combineByteArrays(
+					new byte[] {QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE.getValue()},
+					byteBuffer.array()
+				);
 			case QVX_TEXT:
 				return stringToByteArray_zeroTerminated(fieldHeader, s);
 			default:
@@ -260,6 +269,57 @@ public class QvxWriter {
 		return arr;
 	}
 	
+	private double dateTimeToDouble(QvxFieldHeader fieldHeader, String sDate) {
+		
+		System.out.println("dateTimeToDouble(" + sDate + ")");
+		FieldAttrType fieldAttrType = fieldHeader.getFieldFormat().getType();
+		System.out.println("fieldAttrType: " + fieldAttrType);
+		
+		// Extract the date and time parts from the combined date-time string
+		String datePart = null;
+		String timePart = null;
+		String[] dateTimeParts = sDate.split("T");
+		if (dateTimeParts.length == 2) {
+			datePart = dateTimeParts[0];
+			timePart = dateTimeParts[1];
+		}else {
+			if (sDate.contains(":")){
+				timePart = sDate;
+			}else if (sDate.contains("-")) {
+				datePart = sDate;
+			}
+		}
+		
+		System.out.println("date part: " + datePart);
+		System.out.println("time part: " + timePart);
+		
+		switch (fieldAttrType) {
+		case DATE:
+			if (datePart != null)
+				return dateToDaysSince(datePart);
+			else
+				return dateToDaysSince("9999-12-31");
+		case INTERVAL:
+			if (timePart != null)
+				return timeToDaysSince(timePart);
+			else
+				return timeToDaysSince("0:0:0");
+		case TIME:
+			break;
+		case TIMESTAMP:
+			double daysSince = 0;
+			if (datePart != null)
+				daysSince += dateToDaysSince(datePart);
+			if (timePart != null)
+				daysSince += timeToDaysSince(timePart);
+			return daysSince;
+		default:
+			throw new RuntimeException("Unknown FieldAttrType: " + fieldAttrType);
+		}
+		
+		return -1.0;
+	}
+	
 	private QvxFieldExtent determineExtent(QvxFieldHeader fieldHeader) {
 		
 		if (fieldHeader.getType() == QvxFieldType.QVX_TEXT) {
@@ -268,6 +328,52 @@ public class QvxWriter {
 			return QvxFieldExtent.QVX_FIX;
 		}
 	}
+	
+	/*
+	public FieldAttrType getDateTimeFieldAttr(String fieldName) {
+		
+		/* Used for the Knime type "Date and Time" (legacy). Based on the format of the "fieldName" column,
+		 * return either DATE, INTERVAL, TIME, or TIMESTAMP
+		 
+		
+		// Find the column index that corresponds to fieldName
+		int columnIndex = -1;
+		for(int i = 0; i < fieldNames.length; i++) {
+			if (fieldNames[i].equals(fieldName)) {
+				columnIndex = 0;
+				break;
+			}
+		}
+		if (columnIndex == -1) {
+			throw new RuntimeException("Field name not found: " + fieldName);
+		}
+		
+		// Find the first non-null value in the column
+		String sDate = "";
+		CloseableRowIterator iterator = table.iterator();
+        while (iterator.hasNext()) {
+        	DataCell cell = iterator.next().getCell(columnIndex);
+        	if (!cell.isMissing()) {
+        		sDate = cell.toString();
+        		break;
+        	}
+        }
+		
+        // Based on the format of the value, determine the appropriate FieldAttrType
+		if (sDate.contains("T")) {
+			System.out.println("TIMESTAMP found");
+			return TIMESTAMP;
+		}else if (sDate.contains(":")) {
+			System.out.println("INTERVAL found");
+			return INTERVAL;
+		}else if (sDate.contains("-")) {
+			System.out.println("DATE found");
+			return DATE;
+		}
+		
+		return TIME;*/
+		
+		//TODO: Handle "TIME" FieldAttrType
 	
 	private byte getNullFlagSuppressDataByte(QvxFieldHeader fieldHeader, String s) {
 		
@@ -322,9 +428,14 @@ public class QvxWriter {
 		if (knimeType.equals("Local Date Time")) {
 			fieldAttributes.setFmt("YYYY-MM-DD'T'HH:MM[:ss]");
 		}else if (knimeType.equals("Local Date")) {
-			fieldAttributes.setFmt("YYYY-MM-DD");
+			fieldAttributes.setFmt("M/D/YYYY");
 		}else if (knimeType.equals("Local Time")) {
 			fieldAttributes.setFmt("HH:MM[:ss]");
+		}else if (knimeType.equals("Date and Time")) {
+			//Get the first non-empty value from the data table, then set FieldAttrType based on this value
+			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
+    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
+    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
 		}
 		
 	fieldHeader.setFieldFormat(fieldAttributes);
@@ -356,7 +467,8 @@ public class QvxWriter {
 		}else if (type.equals("Number (double)")) {
 			fieldHeader.setType(QvxFieldType.QVX_IEEE_REAL);
 			fieldHeader.setByteWidth(BigInteger.valueOf(8));	
-		}else if (type.equals("String") || type.equals("Local Date Time") || type.equals("Local Date") || type.equals("Local Time")) {
+		}else if (type.equals("String") || type.equals("Local Date Time") || 
+				type.equals("Local Date") || type.equals("Local Time") || type.equals("Date and Time")) {
 			fieldHeader.setType(QvxFieldType.QVX_TEXT);
 			fieldHeader.setByteWidth(BigInteger.valueOf(0));
 		}else {
