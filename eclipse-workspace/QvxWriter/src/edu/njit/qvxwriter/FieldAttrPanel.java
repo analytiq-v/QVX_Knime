@@ -40,6 +40,8 @@ class FieldAttrPanel extends JPanel {
 	
 	void saveSettingsInto(final QvxWriterNodeSettings settings) {
 		
+		System.out.println("FieldAttrPanel: saveSettingsInto");
+		
 		String[] columnNames = new String[columnNameFields.length];
 		for(int i = 0; i < columnNames.length; i++) {
 			columnNames[i] = columnNameFields[i].getText();
@@ -177,7 +179,6 @@ class FieldAttrPanel extends JPanel {
 		}else if (type.equals("String")) {
 			return new String[] {
 					FieldAttrType.ASCII.value(),
-					FieldAttrType.INTERVAL.value(),
 					FieldAttrType.UNKNOWN.value()
 			};
 		}else if (type.equals("Local Date Time")) {
@@ -195,9 +196,19 @@ class FieldAttrPanel extends JPanel {
 					FieldAttrType.TIME.value(),
 					FieldAttrType.UNKNOWN.value()
 			};
+		}else if (type.contentEquals("Date and Time")){ //Legacy date-time format
+			return new String[] {
+					FieldAttrType.TIMESTAMP.value(),
+					FieldAttrType.DATE.value(),
+					FieldAttrType.INTERVAL.value(),
+					FieldAttrType.TIME.value(),
+					FieldAttrType.UNKNOWN.value()
+			};
 		}else {
-			throw new RuntimeException("Coding error in FieldAttrPanel.java: Unrecognized KNIME type: " + type);
+			System.out.println("Unknown type: " + type);
+			return null;
 		}
+		//
 	}
 	
 	String getDefaultAttrType(DataColumnSpec spec) {
@@ -217,8 +228,10 @@ class FieldAttrPanel extends JPanel {
 			return FieldAttrType.DATE.value();
 		}else if (type.equals("Local Time")) {
 			return FieldAttrType.TIME.value();
+		}else if (type.equals("Date and Time")) { //Legacy date-time format
+			return FieldAttrType.TIMESTAMP.value();
 		}else {
-			throw new RuntimeException("Coding error in FieldAttrPanel.java: Unrecognized KNIME type: " + type);
+			return null;
 		}
 	}
 }

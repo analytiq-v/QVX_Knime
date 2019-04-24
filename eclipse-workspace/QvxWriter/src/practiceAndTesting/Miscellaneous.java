@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +18,7 @@ public class Miscellaneous {
 	
 	
 	public static void main(String[] argv) {
-		Util.getDateFromQvxReal(5);
+		System.out.println(Arrays.toString(("ABCDEF").split("C")));
 	}
 	
 	

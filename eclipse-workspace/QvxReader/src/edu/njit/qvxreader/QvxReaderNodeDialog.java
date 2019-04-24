@@ -18,6 +18,8 @@ import org.knime.core.node.workflow.FlowVariable;
 
 import edu.njit.qvxreader.QvxReaderNodeSettings;
 
+import static edu.njit.util.Util.checkNotNull;
+
 /**
  * <code>NodeDialog</code> for the "QvxReader" Node.
  * 
@@ -67,11 +69,17 @@ public class QvxReaderNodeDialog extends NodeDialogPane {
 		
 		System.out.println("NodeDialog: saveSettingsTo()");
 		QvxReaderNodeSettings m_settings = new QvxReaderNodeSettings();
+		System.out.println(m_settings == null);
+		checkNotNull(m_settings, "m_settings");
 	
 		//fileName
 		String fileName = filesHistoryPanel.getSelectedFile();
+		System.out.println(fileName == null);
+		checkNotNull(fileName, "fileName");
 		m_settings.setFileName(fileName);
 		
+		System.out.println(settings == null);
+		checkNotNull(settings, "settings");
 		m_settings.saveSettingsTo(settings);
 	}
 	

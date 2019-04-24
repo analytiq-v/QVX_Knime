@@ -134,10 +134,17 @@ class AdvancedPanel extends JPanel {
 		
 		System.out.println("AdvancedPanel.loadValuesIntoPanel()");
 		
-		boolean isBigEndian = settings.getBoolean(QvxWriterNodeSettings.CFGKEY_IS_BIG_ENDIAN);
+		boolean isBigEndian = false;
+		try {
+			isBigEndian = settings.getBoolean(QvxWriterNodeSettings.CFGKEY_IS_BIG_ENDIAN);
+		}catch(InvalidSettingsException e) {	
+		}
 		
-		boolean usesRecordSeparator = settings.getBoolean(
-				QvxWriterNodeSettings.CFGKEY_USES_RECORD_SEPARATOR);
+		boolean usesRecordSeparator = false;
+		try {
+			usesRecordSeparator = settings.getBoolean(QvxWriterNodeSettings.CFGKEY_USES_RECORD_SEPARATOR);
+		}catch(InvalidSettingsException e) {
+		}
 		
 		//isBigEndian
 		if (isBigEndian) {
@@ -147,6 +154,8 @@ class AdvancedPanel extends JPanel {
 		}
 		
 		//usesRecordSeparator
-		recordSeparatorCheckBox.setSelected(usesRecordSeparator);	
+		recordSeparatorCheckBox.setSelected(usesRecordSeparator);
+		
+		System.out.println("AdvancedPanel done loading values");
 	}
 }

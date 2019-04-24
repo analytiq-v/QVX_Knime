@@ -466,8 +466,10 @@ public class QvxReader {
 					System.out.println("Calendar: " + cal.getTime());
 					return cal;
 				}else {
-					throw new RuntimeException("Unimplemented QvxFieldType-FieldAttrType combination: " +
-							type + ", " + fieldAttrType);
+					System.out.println("WARNING: Unimplemented QvxFieldType-FieldAttrType combination: " +
+							type + ", " + fieldAttrType + "; This field will not be stored as a " +
+							fieldAttrType);
+					return data;
 				}
 			}else {
 				returnVal = data;
