@@ -2,16 +2,25 @@ package practiceAndTesting;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.njit.qvx.FieldAttrType;
+import edu.njit.util.Util;
 
 public class Miscellaneous {
 
+	
+	
 	public static void main(String[] argv) {
-		fieldAttrTypeTest();		
+		Util.getDateFromQvxReal(5);
 	}
+	
+	
 	
 	public static void fieldAttrTypeTest() {
 		int c;

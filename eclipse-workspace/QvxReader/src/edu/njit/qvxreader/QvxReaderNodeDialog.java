@@ -86,8 +86,8 @@ public class QvxReaderNodeDialog extends NodeDialogPane {
 			//fileName
 			filesHistoryPanel.setSelectedFile(fileName);
 			
-		} catch (InvalidSettingsException e) {
-			e.printStackTrace();
+		} catch (InvalidSettingsException e) { // Node is being opened for the first time
+			filesHistoryPanel.setSelectedFile("");
 		}
 	}
 }

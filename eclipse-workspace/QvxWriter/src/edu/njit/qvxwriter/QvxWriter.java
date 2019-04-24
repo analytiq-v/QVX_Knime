@@ -322,7 +322,7 @@ public class QvxWriter {
 		if (knimeType.equals("Local Date Time")) {
 			fieldAttributes.setFmt("YYYY-MM-DD'T'HH:MM[:ss]");
 		}else if (knimeType.equals("Local Date")) {
-			fieldAttributes.setFmt("YYYY-MM-DD");
+			fieldAttributes.setFmt("M/D/YYYY");
 		}else if (knimeType.equals("Local Time")) {
 			fieldAttributes.setFmt("HH:MM[:ss]");
 		}
