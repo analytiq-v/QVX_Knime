@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Util {
 	
+	public static final int HOUR_NULL = -1; //Signifies that the "Calendar" refers to date, not dateTime
 	public static SimpleDateFormat dateFormat = new SimpleDateFormat("MM dd yyyy");
 	public static long MILLISECONDS_PER_DAY = 86400000;
 	static Date EPOCH;
@@ -47,17 +48,13 @@ public class Util {
 		long dateInMilliseconds = (START_DATE.getTime()-EPOCH.getTime()) +
 				(long)daysSince*MILLISECONDS_PER_DAY;
 		Date date = new Date(dateInMilliseconds);
-		System.out.println(date);
 		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
 		calendar.setTime(date);
-		int month = calendar.get(Calendar.MONTH) + 1;
-		int day = calendar.get(Calendar.DAY_OF_MONTH);
+		int month = calendar.get(Calendar.MONTH);
+		int day = calendar.get(Calendar.DAY_OF_MONTH) + 1;
 		int year = calendar.get(Calendar.YEAR);
 		calendar.set(year, month, day);
-		System.out.println("Date: " + month + " " + day + " " + year);
-		System.out.println(calendar.isSet(Calendar.HOUR));
-		calendar.set(Calendar.HOUR, 3);
-		System.out.println(calendar.isSet(Calendar.HOUR));
+		calendar.set(Calendar.HOUR, HOUR_NULL);
 		
 		return calendar;
 	}

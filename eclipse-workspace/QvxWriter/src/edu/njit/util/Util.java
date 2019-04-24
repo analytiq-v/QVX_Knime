@@ -55,10 +55,7 @@ public class Util {
 		int day = calendar.get(Calendar.DAY_OF_MONTH);
 		int year = calendar.get(Calendar.YEAR);
 		calendar.set(year, month, day);
-		System.out.println("Date: " + month + " " + day + " " + year);
-		System.out.println(calendar.isSet(Calendar.HOUR));
 		calendar.set(Calendar.HOUR, HOUR_NULL);
-		System.out.println(calendar.isSet(Calendar.HOUR));
 		
 		return calendar;
 	}
