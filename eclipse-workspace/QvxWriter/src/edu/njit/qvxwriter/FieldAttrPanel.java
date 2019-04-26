@@ -184,16 +184,25 @@ class FieldAttrPanel extends JPanel {
 		}else if (type.equals("Local Date Time")) {
 			return new String[] {
 					FieldAttrType.TIMESTAMP.value(),
+					FieldAttrType.DATE.value(),
+					FieldAttrType.INTERVAL.value(),
+					FieldAttrType.TIME.value(),
 					FieldAttrType.UNKNOWN.value()
 			};
 		}else if (type.equals("Local Date")) {
 			return new String[] {
 					FieldAttrType.DATE.value(),
+					FieldAttrType.INTERVAL.value(),
+					FieldAttrType.TIME.value(),
+					FieldAttrType.TIMESTAMP.value(),
 					FieldAttrType.UNKNOWN.value()
 			};
 		}else if (type.equals("Local Time")) {
 			return new String[] {
 					FieldAttrType.TIME.value(),
+					FieldAttrType.DATE.value(),
+					FieldAttrType.INTERVAL.value(),
+					FieldAttrType.TIMESTAMP.value(),
 					FieldAttrType.UNKNOWN.value()
 			};
 		}else if (type.contentEquals("Date and Time")){ //Legacy date-time format
