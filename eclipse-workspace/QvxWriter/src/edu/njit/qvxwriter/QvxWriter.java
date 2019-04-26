@@ -35,9 +35,12 @@ import edu.njit.qvx.QvxTableHeader;
 import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 
 import static edu.njit.qvx.FieldAttrType.DATE;
+import static edu.njit.qvx.FieldAttrType.FIX;
 import static edu.njit.qvx.FieldAttrType.INTERVAL;
+import static edu.njit.qvx.FieldAttrType.REAL;
 import static edu.njit.qvx.FieldAttrType.TIME;
 import static edu.njit.qvx.FieldAttrType.TIMESTAMP;
+import static edu.njit.qvx.FieldAttrType.UNKNOWN;
 import static edu.njit.qvx.QvxNullRepresentation.QVX_NULL_FLAG_SUPPRESS_DATA;
 import static edu.njit.qvx.QvxNullRepresentation.QVX_NULL_NEVER;
 import static edu.njit.util.Util.combineByteArrays;
@@ -229,7 +232,7 @@ public class QvxWriter {
 				}
 				return byteBuffer.array();
 			case QVX_QV_DUAL:
-				//Only used for writing dates/intervals/time/timestamps
+				//Only used for writing Dates/Intervals/Time/Timestamps
 				byteBuffer = ByteBuffer.allocate(8);
 				byteBuffer.order(fieldHeader.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
 				byteBuffer.putDouble(dateTimeToDouble(fieldHeader, s));
@@ -298,26 +301,27 @@ public class QvxWriter {
 			if (datePart != null)
 				return dateToDaysSince(datePart);
 			else
-				return dateToDaysSince("9999-12-31");
+				return dateToDaysSince("0-1-1");
 		case INTERVAL:
+		case TIME:
 			if (timePart != null)
 				return timeToDaysSince(timePart);
 			else
 				return timeToDaysSince("0:0:0");
-		case TIME:
-			break;
 		case TIMESTAMP:
 			double daysSince = 0;
-			if (datePart != null)
+			if (datePart != null) {
 				daysSince += dateToDaysSince(datePart);
+			}else {
+				daysSince += dateToDaysSince("0-1-1");
+			}
+			
 			if (timePart != null)
 				daysSince += timeToDaysSince(timePart);
 			return daysSince;
 		default:
 			throw new RuntimeException("Unknown FieldAttrType: " + fieldAttrType);
-		}
-		
-		return -1.0;
+		}		
 	}
 	
 	private QvxFieldExtent determineExtent(QvxFieldHeader fieldHeader) {
@@ -328,52 +332,6 @@ public class QvxWriter {
 			return QvxFieldExtent.QVX_FIX;
 		}
 	}
-	
-	/*
-	public FieldAttrType getDateTimeFieldAttr(String fieldName) {
-		
-		/* Used for the Knime type "Date and Time" (legacy). Based on the format of the "fieldName" column,
-		 * return either DATE, INTERVAL, TIME, or TIMESTAMP
-		 
-		
-		// Find the column index that corresponds to fieldName
-		int columnIndex = -1;
-		for(int i = 0; i < fieldNames.length; i++) {
-			if (fieldNames[i].equals(fieldName)) {
-				columnIndex = 0;
-				break;
-			}
-		}
-		if (columnIndex == -1) {
-			throw new RuntimeException("Field name not found: " + fieldName);
-		}
-		
-		// Find the first non-null value in the column
-		String sDate = "";
-		CloseableRowIterator iterator = table.iterator();
-        while (iterator.hasNext()) {
-        	DataCell cell = iterator.next().getCell(columnIndex);
-        	if (!cell.isMissing()) {
-        		sDate = cell.toString();
-        		break;
-        	}
-        }
-		
-        // Based on the format of the value, determine the appropriate FieldAttrType
-		if (sDate.contains("T")) {
-			System.out.println("TIMESTAMP found");
-			return TIMESTAMP;
-		}else if (sDate.contains(":")) {
-			System.out.println("INTERVAL found");
-			return INTERVAL;
-		}else if (sDate.contains("-")) {
-			System.out.println("DATE found");
-			return DATE;
-		}
-		
-		return TIME;*/
-		
-		//TODO: Handle "TIME" FieldAttrType
 	
 	private byte getNullFlagSuppressDataByte(QvxFieldHeader fieldHeader, String s) {
 		
@@ -412,33 +370,67 @@ public class QvxWriter {
 		
 		//TODO: Deal with "Interval" FieldAttrType
 		FieldAttributes fieldAttributes = new FieldAttributes();
-		FieldAttrType qvxAttr = FieldAttrType.fromValue(settings.getSelectedFieldAttrs()[columnIndex]);
-		fieldAttributes.setType(qvxAttr);
+		FieldAttrType attrType = FieldAttrType.fromValue(settings.getSelectedFieldAttrs()[columnIndex]);
+		fieldAttributes.setType(attrType);
 		
-		if(qvxAttr.equals(FieldAttrType.UNKNOWN)) { //There is no additional formatting needed for "UNKNOWN" FieldAttrType
+		if(attrType.equals(UNKNOWN)) { //There is no additional formatting needed for "UNKNOWN" FieldAttrType
 			fieldHeader.setFieldFormat(fieldAttributes);
-			return;
-		}
-		
-		if(qvxAttr.equals(FieldAttrType.FIX) || qvxAttr.equals(FieldAttrType.REAL)) {
+			
+		}else if(attrType.equals(FIX) || attrType.equals(REAL)) {
 			fieldAttributes.setNDec(BigInteger.valueOf(settings.getSelectedNDecs()[columnIndex]));
-		}
-		
-		String knimeType = table.getDataTableSpec().getColumnSpec(columnIndex).getType().getName();
-		if (knimeType.equals("Local Date Time")) {
-			fieldAttributes.setFmt("YYYY-MM-DD'T'HH:MM[:ss]");
-		}else if (knimeType.equals("Local Date")) {
+			
+		}else if (attrType.equals(DATE)) {
 			fieldAttributes.setFmt("M/D/YYYY");
-		}else if (knimeType.equals("Local Time")) {
-			fieldAttributes.setFmt("HH:MM[:ss]");
-		}else if (knimeType.equals("Date and Time")) {
-			//Get the first non-empty value from the data table, then set FieldAttrType based on this value
+			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
+    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
+    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
+			
+		}else if (attrType.equals(INTERVAL) || attrType.equals(TIME)) {
+			fieldAttributes.setFmt("hh:mm:ss TT");
+			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
+    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
+    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
+			
+		}else if (attrType.equals(TIMESTAMP)) {
+			fieldAttributes.setFmt("M/D/YYYY hh:mm:ss TT");
 			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
     		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
     		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
 		}
 		
-	fieldHeader.setFieldFormat(fieldAttributes);
+		fieldHeader.setFieldFormat(fieldAttributes);
+		
+		return;
+		
+		/*
+		String knimeType = table.getDataTableSpec().getColumnSpec(columnIndex).getType().getName();
+		System.out.println("KNIME Type: " + knimeType);
+		//TODO: Make this into a compound if-else clause (functionality is the same regardless of which is met)
+		//TODO: Set format String in switch case (fieldAttrTYpe) statement (in existing other method)
+		if (knimeType.equals("Local Date Time")) {
+			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
+    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
+    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
+    		fieldAttributes.setFmt("M/D/YYYY h:mm:ss[.fff] TT");
+		}else if (knimeType.equals("Local Date")) {
+			//TODO
+			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
+    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
+    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
+			fieldAttributes.setFmt("M/D/YYYY");
+		}else if (knimeType.equals("Local Time")) {
+			//TODO
+			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
+    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
+    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
+			fieldAttributes.setFmt("HH:MM[:ss]");
+		}else if (knimeType.equals("Date and Time")) {
+			//TODO
+			System.out.println("KNIME Date and Time field found; modifying field headers");
+			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
+    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
+    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
+		}*/			
 	}
 
 	private void setFieldTypeAndByteWidth(QvxFieldHeader fieldHeader) {

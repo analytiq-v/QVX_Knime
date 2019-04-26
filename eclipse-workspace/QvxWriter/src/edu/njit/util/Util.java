@@ -84,7 +84,7 @@ public class Util {
 		cal.set(Calendar.MONTH, month);
 		cal.set(Calendar.DAY_OF_MONTH, dayOfMonth);
 		cal.set(Calendar.YEAR, year);
-		
+				
 		return (cal.getTimeInMillis() + EPOCH.getTime() - START_DATE.getTime())/MILLISECONDS_PER_DAY;
 	}
 	
@@ -95,7 +95,13 @@ public class Util {
 		String[] parts = time.split(":");
 		double hours = Double.parseDouble(parts[0]);
 		double minutes = Double.parseDouble(parts[1]);
-		double seconds = Double.parseDouble(parts[2]);
+		
+		double seconds = 0;
+		try {
+			seconds = Double.parseDouble(parts[2]);
+		}catch(IndexOutOfBoundsException e) { //If only minutes and hours are specified
+			seconds = 0;
+		}
 		
 		return (hours*3600 + minutes*60 + seconds)/SECONDS_PER_DAY;
 	}

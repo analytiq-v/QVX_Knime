@@ -52,6 +52,7 @@ import static edu.njit.qvx.FieldAttrType.TIMESTAMP;
 import static edu.njit.qvx.QvxFieldType.QVX_QV_DUAL;
 import static edu.njit.qvx.QvxFieldType.QVX_SIGNED_INTEGER;
 import static edu.njit.qvx.QvxFieldType.QVX_UNSIGNED_INTEGER;
+import static edu.njit.util.Util.getDateFromString;
 import static edu.njit.util.Util.getDateFromQvxReal;
 
 public class QvxReader {
@@ -158,7 +159,7 @@ public class QvxReader {
 		    		cells[j] = new StringCell((String)dataPt);
 		    	}else if(dataClass.equals(java.util.GregorianCalendar.class)){
 		    		Calendar cal = (Calendar)dataPt;
-		    		System.out.println("Calendar: " + cal.getTime());
+		    		//System.out.println("Calendar: " + cal.getTime());
 		    		cells[j] = getCorrectDateAndTimeCell(cal, fieldAttrTypes[j]);
 				}else {
 					throw new RuntimeException("Unknown data type: " + dataClass);
@@ -460,10 +461,21 @@ public class QvxReader {
 			}else if (fieldAttrType == DATE || fieldAttrType == INTERVAL || fieldAttrType == TIME
 					|| fieldAttrType == TIMESTAMP ) {
 				
-				if (type == QVX_QV_DUAL) {
-					System.out.println("Qvx Dual date: " + data);
-					Calendar cal = getDateFromQvxReal((double)data);
-					System.out.println("Calendar: " + cal.getTime());
+				if (type == QVX_QV_DUAL) { 
+					//System.out.println("Qvx Dual date: " + data);
+					Calendar cal = null;
+					try {
+						//It is expected that value is a double that represents days since 1900
+						cal = getDateFromQvxReal((double)data); 
+					}catch(ClassCastException e1) {
+						try {
+							cal = getDateFromString((String)data);
+						}catch(ClassCastException e2) {
+							return null;
+						}
+					}
+					
+					//System.out.println("Calendar: " + cal.getTime());
 					return cal;
 				}else {
 					System.out.println("WARNING: Unimplemented QvxFieldType-FieldAttrType combination: " +
@@ -501,16 +513,16 @@ public class QvxReader {
 		
 		switch (fieldAttrType) {
 		case DATE:
-			System.out.println("Type is date");
+			//System.out.println("Type is date");
 			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
 					cal.get(Calendar.DAY_OF_MONTH));
 		case TIMESTAMP:
-			System.out.println("Type is timestamp");
+			//System.out.println("Type is timestamp");
 			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
 					cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
 					cal.get(Calendar.SECOND));
 		case INTERVAL:
-			System.out.println("Type is interval");
+		case TIME:
 			return new DateAndTimeCell(cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
 					cal.get(Calendar.SECOND), cal.get(Calendar.MILLISECOND));
 		default:
