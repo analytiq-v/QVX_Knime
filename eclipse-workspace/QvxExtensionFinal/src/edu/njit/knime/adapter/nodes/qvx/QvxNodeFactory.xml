@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./default.png" type="Source" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>Qvx Reader</name>
+    <shortDescription>
+        reads different QVX file formats and converts them into a readable table format with a two dimensional array
+    </shortDescription>
+    <fullDescription>
+        <intro>Reading qvx files</intro>
+        <option name="short name of first option (like in the dialog)">Loads a file from QlikView and converts data into
+        																a two dimensional array understood by KNIME</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="QVXReader">reads various QVX files with different data types that can be understood
+        									by KNIME analytics by Monica Sangam
+        									</inPort>
+        <!-- possibly more input ports here-->
+        <outPort index="1" name="QVXWriter">stores the attributes of the QVX file in a two dimensional array</outPort>
+        <!-- possibly more output ports here-->
+    </ports>    
+</knimeNode>
