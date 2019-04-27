@@ -387,7 +387,7 @@ public class QvxUtility {
 		return data;
 	}
 	
-	 public static void main(String[] args) {
+	 /*public static void main(String[] args) {
 		 /*QVXReader qvxReader;
 		 QvxTableHeader qvxTableHeader = null;
 		 List<List<String>>  qvxData = null;
@@ -408,9 +408,9 @@ public class QvxUtility {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}*/
+		}
 		 
 
 
-	 }
+	 }*/
 }

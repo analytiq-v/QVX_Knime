@@ -1,5 +1,5 @@
 # capstone-project
-There are two Java projects in this repository: QvxReader and QvxWriter.
+There are two main Java projects in this repository: QvxReader and QvxWriter.
 Both of these project folders are within the folder "capstone-project/eclipse-workspace".
 
 QvxReader: KNIME node that allows the user to select a qvx input file. On execution, this file is read by the node, and a BufferedDataTable
@@ -15,3 +15,7 @@ https://github.com/knime/knime-sdk-setup
 In Eclipse, click on "Open Projects from File System". Select either the folder "capstone-project/eclipse-workspace/QvxReader" or
 "capstone-project/eclipse-worksapce/QvxWriter". It is recommended that you have both of these projects open at once, so that
 both the QvxReader node and the QvxWriter node are available in KNIME when it is launched.
+
+There is another project in the "capstone-project/eclipse-workspace" folder, called "JAXB Generation". We used JAXB to generate Java classes to help
+us deal with the XML-formatted QVX Table Header. We have already copied these generated classes into both the QvxReader and the QvxWriter projects. Thus,
+it is not necessary to run "JAXB Generation" in order to test our QvxReader and QvxWriter.
