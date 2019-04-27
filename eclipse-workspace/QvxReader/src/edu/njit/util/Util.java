@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import org.knime.core.data.def.TimestampCell;
+
 public class Util {
 	
 	public static Calendar nullCalendar = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
@@ -142,11 +144,17 @@ public class Util {
 		long dateInMilliseconds = (START_DATE.getTime()-EPOCH.getTime()) +
 				(long)(fullDaysSince*MILLISECONDS_PER_DAY) +
 				(long)(remainingSeconds*1000);
-		Date date = new Date(dateInMilliseconds);
-		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
-		calendar.setTime(date);
 		
-		return resolveDateOffset(calendar);
+		Date date = new Date(dateInMilliseconds);
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
+		cal.setTime(date);
+		System.out.println("AM or PM?\t" + cal.get(Calendar.AM_PM));
+		
+		if (cal.get(Calendar.AM_PM) == Calendar.PM) {
+			//Note: AM/PM value not supported by "DateTime" cell
+		}
+		
+		return resolveDateOffset(cal);
 	}
 	
 	public static String removeSuffix(String s, String suffix) {

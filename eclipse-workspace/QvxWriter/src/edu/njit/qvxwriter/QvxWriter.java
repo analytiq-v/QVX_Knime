@@ -41,8 +41,11 @@ import static edu.njit.qvx.FieldAttrType.REAL;
 import static edu.njit.qvx.FieldAttrType.TIME;
 import static edu.njit.qvx.FieldAttrType.TIMESTAMP;
 import static edu.njit.qvx.FieldAttrType.UNKNOWN;
+import static edu.njit.qvx.QvxFieldType.QVX_QV_DUAL;
 import static edu.njit.qvx.QvxNullRepresentation.QVX_NULL_FLAG_SUPPRESS_DATA;
 import static edu.njit.qvx.QvxNullRepresentation.QVX_NULL_NEVER;
+import static edu.njit.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE;
+import static edu.njit.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_NULL;
 import static edu.njit.util.Util.combineByteArrays;
 import static edu.njit.util.Util.dateToDaysSince;
 import static edu.njit.util.Util.timeToDaysSince;
@@ -164,12 +167,22 @@ public class QvxWriter {
 				//"fieldHeader" is the fieldHeader for the column that is being accessed
 				QvxTableHeader.Fields.QvxFieldHeader fieldHeader = tableHeader.getFields().getQvxFieldHeader().get(j);
 				if (fieldHeader.getNullRepresentation().equals(QVX_NULL_FLAG_SUPPRESS_DATA)) {
-					byte nullFlag = getNullFlagSuppressDataByte(fieldHeader, data[i][j]);
-					if (nullFlag == 1) {
-						byteValue = new byte[] {nullFlag};
+					if (fieldHeader.getType().equals(QVX_QV_DUAL)) {
+						byte qvSpecialFlag = getQvxSpecialFlag(data[i][j]);
+						if (qvSpecialFlag == QVX_QV_SPECIAL_NULL.getValue()) {
+							byteValue = new byte[] {qvSpecialFlag};
+						}else {
+							byteValue = combineByteArrays(new byte[] {qvSpecialFlag},
+								convertToByteValue(fieldHeader, data[i][j]));
+						}
 					}else {
-						byteValue = combineByteArrays(
-							new byte[] {nullFlag}, convertToByteValue(fieldHeader, data[i][j]));
+						byte nullFlag = getNullFlagSuppressDataByte(fieldHeader, data[i][j]);
+						if (nullFlag == 1) {
+							byteValue = new byte[] {nullFlag};
+						}else {
+							byteValue = combineByteArrays(
+								new byte[] {nullFlag}, convertToByteValue(fieldHeader, data[i][j]));
+						}
 					}
 				}else if (fieldHeader.getNullRepresentation().equals(QVX_NULL_NEVER)) {
 					byteValue = convertToByteValue(fieldHeader, data[i][j]);
@@ -236,10 +249,7 @@ public class QvxWriter {
 				byteBuffer = ByteBuffer.allocate(8);
 				byteBuffer.order(fieldHeader.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
 				byteBuffer.putDouble(dateTimeToDouble(fieldHeader, s));
-				return combineByteArrays(
-					new byte[] {QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE.getValue()},
-					byteBuffer.array()
-				);
+				return byteBuffer.array();
 			case QVX_TEXT:
 				return stringToByteArray_zeroTerminated(fieldHeader, s);
 			default:
@@ -301,7 +311,7 @@ public class QvxWriter {
 			if (datePart != null)
 				return dateToDaysSince(datePart);
 			else
-				return dateToDaysSince("0-1-1");
+				return dateToDaysSince("0-1-2");
 		case INTERVAL:
 		case TIME:
 			if (timePart != null)
@@ -313,7 +323,7 @@ public class QvxWriter {
 			if (datePart != null) {
 				daysSince += dateToDaysSince(datePart);
 			}else {
-				daysSince += dateToDaysSince("0-1-1");
+				daysSince += dateToDaysSince("0-1-2");
 			}
 			
 			if (timePart != null)
@@ -342,6 +352,11 @@ public class QvxWriter {
 			}
 		}
 		return nullFlag;
+	}
+	
+	private byte getQvxSpecialFlag(String s) { // Assume QVX_IEEE_REAL is used
+		
+		return s.equals("") ? QVX_QV_SPECIAL_NULL.getValue() : QVX_QV_SPECIAL_DOUBLE.getValue();
 	}
 	
 	private static int insertInto(byte[] target, byte value, int offset) {
@@ -383,54 +398,19 @@ public class QvxWriter {
 			fieldAttributes.setFmt("M/D/YYYY");
 			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
     		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
-    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
 			
 		}else if (attrType.equals(INTERVAL) || attrType.equals(TIME)) {
 			fieldAttributes.setFmt("hh:mm:ss TT");
 			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
     		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
-    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
 			
 		}else if (attrType.equals(TIMESTAMP)) {
 			fieldAttributes.setFmt("M/D/YYYY hh:mm:ss TT");
 			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
     		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
-    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
 		}
 		
 		fieldHeader.setFieldFormat(fieldAttributes);
-		
-		return;
-		
-		/*
-		String knimeType = table.getDataTableSpec().getColumnSpec(columnIndex).getType().getName();
-		System.out.println("KNIME Type: " + knimeType);
-		//TODO: Make this into a compound if-else clause (functionality is the same regardless of which is met)
-		//TODO: Set format String in switch case (fieldAttrTYpe) statement (in existing other method)
-		if (knimeType.equals("Local Date Time")) {
-			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
-    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
-    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
-    		fieldAttributes.setFmt("M/D/YYYY h:mm:ss[.fff] TT");
-		}else if (knimeType.equals("Local Date")) {
-			//TODO
-			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
-    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
-    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
-			fieldAttributes.setFmt("M/D/YYYY");
-		}else if (knimeType.equals("Local Time")) {
-			//TODO
-			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
-    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
-    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
-			fieldAttributes.setFmt("HH:MM[:ss]");
-		}else if (knimeType.equals("Date and Time")) {
-			//TODO
-			System.out.println("KNIME Date and Time field found; modifying field headers");
-			fieldHeader.setType(QvxFieldType.QVX_QV_DUAL);
-    		fieldHeader.setExtent(QvxFieldExtent.QVX_QV_SPECIAL);
-    		fieldHeader.setNullRepresentation(QvxNullRepresentation.QVX_NULL_NEVER);
-		}*/			
 	}
 
 	private void setFieldTypeAndByteWidth(QvxFieldHeader fieldHeader) {

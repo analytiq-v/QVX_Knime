@@ -159,7 +159,6 @@ public class QvxReader {
 		    		cells[j] = new StringCell((String)dataPt);
 		    	}else if(dataClass.equals(java.util.GregorianCalendar.class)){
 		    		Calendar cal = (Calendar)dataPt;
-		    		//System.out.println("Calendar: " + cal.getTime());
 		    		cells[j] = getCorrectDateAndTimeCell(cal, fieldAttrTypes[j]);
 				}else {
 					throw new RuntimeException("Unknown data type: " + dataClass);
@@ -253,28 +252,31 @@ public class QvxReader {
 			//Read each field in the row
 			for(int i = 0; i < numFields; i++) {
 				QvxFieldHeader fieldHeader = qvxTableHeader.getFields().getQvxFieldHeader().get(i);
-				QvxNullRepresentation nullRepresentation = fieldHeader.getNullRepresentation();
-				switch(nullRepresentation) {
-				
-				case QVX_NULL_FLAG_SUPPRESS_DATA:
-					byte nullFlag = readBytesFromBuffer(1)[0];
-					if (nullFlag == 0) {
+				QvxFieldType fieldType = fieldHeader.getType();
+				if (!fieldType.equals(QVX_QV_DUAL)) {
+					QvxNullRepresentation nullRepresentation = fieldHeader.getNullRepresentation();
+					switch(nullRepresentation) {
+					
+					case QVX_NULL_FLAG_SUPPRESS_DATA:
+						byte nullFlag = readBytesFromBuffer(1)[0];
+						if (nullFlag == 0) {
+							row[i] = readValueFromBuffer(fieldHeader);
+						}else if (nullFlag == 1) { //Null flag of 1 means a field value is not used
+							row[i] = null;
+						}else {
+							throw new RuntimeException("Unrecognized QVX_NULL_FLAG_SUPPRESS_DATA flag: " +
+									nullFlag);
+						}
+						break;
+					case QVX_NULL_NEVER:
 						row[i] = readValueFromBuffer(fieldHeader);
-						//System.out.println("value: " + row[i]);
-					}else if (nullFlag == 1) { //Null flag of 1 means a field value is not used
-						System.out.println("null value found");
-						row[i] = null;
-					}else {
-						throw new RuntimeException("Unrecognized QVX_NULL_FLAG_SUPPRESS_DATA flag: " +
-								nullFlag);
+						System.out.println("value: " + row[i]);
+						break;
+					default:
+						throw new RuntimeException("Unrecognized null representation: " + nullRepresentation);
 					}
-					break;
-				case QVX_NULL_NEVER:
+				} else { //QVX_QV_DUAL is used; readValueFromBuffer deals with the QvxQvSpecialFlag
 					row[i] = readValueFromBuffer(fieldHeader);
-					System.out.println("value: " + row[i]);
-					break;
-				default:
-					throw new RuntimeException("Unrecognized null representation: " + nullRepresentation);
 				}
 			}
 			data.add(row);
@@ -285,7 +287,7 @@ public class QvxReader {
 			if (readBytesFromBuffer(1)[0] != FS_BYTE) {
 				throw new RuntimeException("File separator byte is expected");
 			}
-		}		
+		}	
 	}
 	
 	private Object readValueFromBuffer(QvxFieldHeader fieldHeader) {
@@ -342,7 +344,7 @@ public class QvxReader {
 		
 		byte flag = readBytesFromBuffer(1)[0];
 		if (flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_NULL.getValue()) {
-			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+			return null;
 			
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_INT.getValue()) {
 			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
@@ -350,7 +352,6 @@ public class QvxReader {
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE.getValue()){
 			ByteOrder byteOrder = fieldHeader.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
 			Object value = ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getDouble();
-			System.out.println("qvx_qv_special_double: original value: " + value);
 			return applyFieldAttr(value, fieldHeader);
 			
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_STRING.getValue()) {
@@ -418,22 +419,16 @@ public class QvxReader {
 	}
 	
 	private Object applyFieldAttr(Object data, QvxFieldHeader fieldHeader) {
-		
-		//System.out.println("applying field formatting...");
-		
+				
 		Object returnVal = null;
 		//Debugging code
 		QvxFieldType type = fieldHeader.getType();
-		System.out.print("Type: " + type);
 		
 		//If there is no formatting for this field, return the original data
 		if (fieldHeader.getFieldFormat() == null || fieldHeader.getFieldFormat().getType() == null) {
-			System.out.println(", Format: None");
 			returnVal = data;
 		}else {	
-			FieldAttrType fieldAttrType = fieldHeader.getFieldFormat().getType();
-			System.out.println(", Format: " + fieldAttrType);
-			
+			FieldAttrType fieldAttrType = fieldHeader.getFieldFormat().getType();			
 			if (fieldAttrType == FIX || fieldAttrType == REAL) {
 				
 				try {
@@ -462,17 +457,20 @@ public class QvxReader {
 					|| fieldAttrType == TIMESTAMP ) {
 				
 				if (type == QVX_QV_DUAL) { 
-					//System.out.println("Qvx Dual date: " + data);
 					Calendar cal = null;
 					try {
 						//It is expected that value is a double that represents days since 1900
 						cal = getDateFromQvxReal((double)data); 
 					}catch(ClassCastException e1) {
 						try {
+							System.out.println("Class Cast Exception");
 							cal = getDateFromString((String)data);
 						}catch(ClassCastException e2) {
 							return null;
 						}
+					}catch(Exception e) {
+						System.out.println("Other exception");
+						e.printStackTrace();
 					}
 					
 					//System.out.println("Calendar: " + cal.getTime());
@@ -513,11 +511,9 @@ public class QvxReader {
 		
 		switch (fieldAttrType) {
 		case DATE:
-			//System.out.println("Type is date");
 			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
 					cal.get(Calendar.DAY_OF_MONTH));
 		case TIMESTAMP:
-			//System.out.println("Type is timestamp");
 			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
 					cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
 					cal.get(Calendar.SECOND));
