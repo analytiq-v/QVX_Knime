@@ -1,5 +1,5 @@
 /* Author monica*/
-package edu.njit.knime.adapter.qvx;
+package edu.njit.qvxreader;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,10 +35,12 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.def.TimestampCell;
 import org.knime.core.data.def.IntCell;
 
-import edu.njit.knime.adapter.nodes.qvx.QvxDataCellFactory;
-import edu.njit.knime.adapter.qvx.QvxTableHeader.Fields.QvxFieldHeader;
+//import edu.njit.knime.adapter.nodes.qvx.QvxDataCellFactory;
+//import edu.njit.knime.adapter.qvx.QvxTableHeader.Fields.QvxFieldHeader;
+import edu.njit.qvx.QvxTableHeader;
+import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 
-public class QVXReader {
+public class QvxUtility {
 	private String filepath = null;
 	private QvxTableHeader qvxTableHeader = null;
     private Vector<ColProperty> columnProperties;
@@ -47,7 +49,7 @@ public class QVXReader {
     private List<List<String>> qvxTableDataText = null;
     private DataRow [] qvxTableData = null;
 	    
-	public QVXReader(String filepath) throws JAXBException, IOException  {
+	public QvxUtility(String filepath) throws JAXBException, IOException  {
 		this.filepath = filepath;
 		//Read the qvx Header
 
@@ -59,7 +61,7 @@ public class QVXReader {
 	        XMLInputFactory xif = XMLInputFactory.newInstance();
 	        XMLEventReader xmlEventReader = xif.createXMLEventReader(reader);
 			jaxbUnmarshaller = context.createUnmarshaller();
-	        qvxTableHeader = (QvxTableHeader) jaxbUnmarshaller.unmarshal(new PartialXmlEventReader(xmlEventReader));
+	        //qvxTableHeader = (QvxTableHeader) jaxbUnmarshaller.unmarshal(new PartialXmlEventReader(xmlEventReader));
 	        
 	        
 
@@ -81,7 +83,7 @@ public class QVXReader {
 	
 	
 	private DataRow[] getTableData(Vector<ColProperty> columnProperties, List<List<String>> qvxTableDataText) {
-		QvxDataCellFactory cellFactory = new QvxDataCellFactory();
+		//QvxDataCellFactory cellFactory = new QvxDataCellFactory();
 		DataRow [] tableData = new DataRow[qvxTableDataText.size()-1];
 		
 		int rowIndex = 0;
@@ -98,7 +100,7 @@ public class QVXReader {
 
     			System.out.println("[ " + columnIndex + "] = " + type);
 
-	        	if(type.equals(IntCell.TYPE)) {
+	        	/*if(type.equals(IntCell.TYPE)) {
 	        			rowData[columnIndex] = cellFactory.createDataCellOfType(IntCell.TYPE, colDataText);
 	        	}
 	        	else	            	
@@ -121,7 +123,7 @@ public class QVXReader {
 	                   	
 	         	if(type.equals(StringCell.TYPE)) {
 	         			rowData[columnIndex] = cellFactory.createDataCellOfType(StringCell.TYPE, colDataText);
-	        	}
+	        	}*/
 	        	columnIndex++;
 			}
 			if(rowIndex>0)
@@ -139,26 +141,26 @@ public class QVXReader {
 	
 	public Vector<ColProperty> getColumnProperties() throws IOException {
 		QvxTableHeader.Fields fields =  qvxTableHeader.getFields(); 
-		List<QvxFieldHeader> qvxFieldHeaderList = fields.getQvxFieldHeader();
+		//List<QvxFieldHeader> qvxFieldHeaderList = fields.getQvxFieldHeader();
 		numOfColumns = 0;
 		
-		for(QvxFieldHeader qvxFieldHeader:qvxFieldHeaderList) {
-			numOfColumns++;
-		}
+		//for(QvxFieldHeader qvxFieldHeader:qvxFieldHeaderList) {
+			//numOfColumns++;
+		//}
 
         
 		int index = 0;
 		ColProperty columnProperty = null;
 		columnProperties = new Vector<ColProperty>();
 		
-		for(QvxFieldHeader qvxFieldHeader:qvxFieldHeaderList) {
+		//for(QvxFieldHeader qvxFieldHeader:qvxFieldHeaderList) {
 			
 			columnProperty = new ColProperty();
-			DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(qvxFieldHeader.getFieldName(), convertQvxToNodeDataType(qvxFieldHeader.getFieldFormat().getType()));
-			DataColumnSpec dataColumSpec = dataColumnSpecCreator.createSpec();
-			columnProperty.setColumnSpec(dataColumSpec);
+			//DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(qvxFieldHeader.getFieldName(), convertQvxToNodeDataType(qvxFieldHeader.getFieldFormat().getType()));
+			//DataColumnSpec dataColumSpec = dataColumnSpecCreator.createSpec();
+			//columnProperty.setColumnSpec(dataColumSpec);
 			columnProperties.add(columnProperty);
-		}
+		//}
 
 		//read the csv file for data		
 	    qvxTableDataText = getTableDataText(filepath.replaceAll(".qvx", ".csv"));
@@ -167,33 +169,33 @@ public class QVXReader {
 		return columnProperties;		
 	}
 
-	private DataType convertQvxToNodeDataType(FieldAttrType 	qvxFieldAttrType) {
+	/*private DataType convertQvxToNodeDataType(FieldAttrType 	qvxFieldAttrType) {
 		
 		switch(qvxFieldAttrType) {
 		
 
-				case REAL:
-					return DoubleCell.TYPE;
+				//case REAL:
+					//return DoubleCell.TYPE;
 					
-				case INTEGER:
-					return IntCell.TYPE;
+				//case INTEGER:
+					//return IntCell.TYPE;
 					
-				case ASCII:
-					return StringCell.TYPE;
+				//case ASCII:
+					//return StringCell.TYPE;
 				
 				//case DATE:
-				case TIMESTAMP:
+				//case TIMESTAMP:
 				//case TIME:
-					return TimestampCell.TYPE;
+					//return TimestampCell.TYPE;
 
-				case MONEY:
-				case UNKNOWN:
-					return StringCell.TYPE;
+				//case MONEY:
+			///	case UNKNOWN:
+					//return StringCell.TYPE;
 					//return BooleanCell.TYPE;
 
 		}
-		return null;
-	}
+		//return null;
+	}*/
 
 	private DataColumnDomain convertQvxToNodeDataDomain(QvxFieldHeader qvxFieldHeader) {
 		
@@ -386,7 +388,7 @@ public class QVXReader {
 	}
 	
 	 public static void main(String[] args) {
-		 QVXReader qvxReader;
+		 /*QVXReader qvxReader;
 		 QvxTableHeader qvxTableHeader = null;
 		 List<List<String>>  qvxData = null;
 		try {
@@ -406,7 +408,7 @@ public class QVXReader {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 		 
 
 
