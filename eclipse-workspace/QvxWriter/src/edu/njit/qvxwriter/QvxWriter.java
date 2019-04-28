@@ -385,7 +385,13 @@ public class QvxWriter {
 		
 		//TODO: Deal with "Interval" FieldAttrType
 		FieldAttributes fieldAttributes = new FieldAttributes();
-		FieldAttrType attrType = FieldAttrType.fromValue(settings.getSelectedFieldAttrs()[columnIndex]);
+		FieldAttrType attrType = null;
+		try {
+			attrType = FieldAttrType.fromValue(settings.getSelectedFieldAttrs()[columnIndex]);
+		}catch(IndexOutOfBoundsException e) {
+			//Happens if a new column is added to the inport-date table and settings were not updated
+			attrType = UNKNOWN;
+		}
 		fieldAttributes.setType(attrType);
 		
 		if(attrType.equals(UNKNOWN)) { //There is no additional formatting needed for "UNKNOWN" FieldAttrType

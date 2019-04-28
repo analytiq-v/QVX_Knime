@@ -148,6 +148,7 @@ public class Util {
 		Date date = new Date(dateInMilliseconds);
 		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
 		cal.setTime(date);
+		//cal.set(Calendar.MONTH, cal.get(Calendar.MONTH)-1);
 		System.out.println("AM or PM?\t" + cal.get(Calendar.AM_PM));
 		
 		if (cal.get(Calendar.AM_PM) == Calendar.PM) {
@@ -155,6 +156,23 @@ public class Util {
 		}
 		
 		return resolveDateOffset(cal);
+	}
+	
+	public static String qvxObjectToString(Object obj) {
+		
+		if (obj.getClass().equals(java.lang.String.class)) {
+			return (String)obj;
+		}else if (obj.getClass().equals(java.lang.Double.class)){
+			/*//Double refers to a date; convert the date to string form
+			Calendar cal = getDateFromQvxReal((double)obj);
+			String month = Integer.toString(cal.get(Calendar.MONTH));
+			String dayOfMonth = Integer.toString(cal.get(Calendar.DAY_OF_MONTH));
+			String year = Integer.toString(cal.get(Calendar.YEAR));
+			return month + "/" + dayOfMonth + "/" + year;*/
+			return Double.toString((double)obj);
+		}else {
+			return "";
+		}
 	}
 	
 	public static String removeSuffix(String s, String suffix) {
