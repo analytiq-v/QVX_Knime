@@ -13,6 +13,10 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -24,19 +28,38 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
-import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 
 import edu.njit.knime.adapter.nodes.qvx.QvxReaderNodeSettings;
-import edu.njit.knime.adapter.nodes.qvx.Util;
+import edu.njit.knime.adapter.qvx.FieldAttrType;
+import edu.njit.knime.adapter.qvx.FieldAttributes;
+import edu.njit.knime.adapter.qvx.QvxFieldExtent;
+import edu.njit.knime.adapter.qvx.QvxFieldType;
+import edu.njit.knime.adapter.qvx.QvxNullRepresentation;
+import edu.njit.knime.adapter.qvx.QvxQvSpecialFlag;
+import edu.njit.knime.adapter.qvx.QvxTableHeader;
 import edu.njit.knime.adapter.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 
+import static edu.njit.knime.adapter.qvx.FieldAttrType.DATE;
+import static edu.njit.knime.adapter.qvx.FieldAttrType.FIX;
+import static edu.njit.knime.adapter.qvx.FieldAttrType.INTERVAL;
+import static edu.njit.knime.adapter.qvx.FieldAttrType.MONEY;
+import static edu.njit.knime.adapter.qvx.FieldAttrType.REAL;
+import static edu.njit.knime.adapter.qvx.FieldAttrType.TIME;
+import static edu.njit.knime.adapter.qvx.FieldAttrType.TIMESTAMP;
+import static edu.njit.knime.adapter.qvx.QvxFieldType.QVX_QV_DUAL;
+import static edu.njit.knime.adapter.qvx.QvxFieldType.QVX_SIGNED_INTEGER;
+import static edu.njit.knime.adapter.qvx.QvxFieldType.QVX_UNSIGNED_INTEGER;
+import static edu.njit.knime.adapter.nodes.qvx.Util.getDateFromQvxReal;
+import static edu.njit.knime.adapter.nodes.qvx.Util.getDateFromString;
+import static edu.njit.knime.adapter.nodes.qvx.Util.objectToString;
 
 public class QvxBinaryReader {
 
@@ -54,37 +77,178 @@ public class QvxBinaryReader {
 	private int bufferIndex = 0;
 	private int zeroByteIndex;
 	private List<Object[]> data = new ArrayList<>();
+	private Boolean fieldUsesDate[]; //For each field, this value is true if it should be stored in KNIME
+	//as a date, false if it should be stored as time or some other format
 		
 	QvxBinaryReader(){
 		
 	}
 	
-	public BufferedDataTable []readQvx(String filepath, ExecutionContext exec) {
+	BufferedDataTable[] readQvx(String inFileName, ExecutionContext exec) {
 		
-		this.inFileName = filepath;
+		this.inFileName = inFileName;
 		this.exec = exec;
 		
 		readQvxTableHeader();
 		readBody();
 		
+		fieldUsesDate = new Boolean[data.size()];
+		
 		System.out.println(Arrays.toString(fieldNames));
-		for(int i = 0; i < data.size(); i++) {
+		for(int i = 0; i < data.size() && i < 10; i++) {
 			System.out.println(Arrays.toString(data.get(i)));
 		}
 		
 		return new BufferedDataTable[] {dataToDataTable()};
 	}
-
-	public List<QvxFieldHeader> readQvxHeaders(String filepath, ExecutionContext exec) {
+	
+	private boolean attemptConversionToDateOrTime(int column) {
 		
-		this.inFileName = filepath;
-		this.exec = exec;
-		
-		readQvxTableHeader();
-		
-		return fieldHeaders;
+		return attemptConversionToDate(column) || attemptConversionToTime(column);
 	}
-
+		
+	private boolean attemptConversionToDate(int column) {
+		
+		/* If every non-null item in data[:,column] can be converted into a Calendar date, do the
+		 * conversions and return true. Otherwise, return false, without doing any of the conversions.
+		 */
+		
+		System.out.println("attemptConversionToDate()");
+		String dateSeps = "-/";
+		String formatA = "^[0-9]{1,2}[" + dateSeps + "][0-9]{1,2}[" + dateSeps + "][0-9]{4}$";
+		String formatB = "^[0-9]{4}[" + dateSeps + "][0-9]{1,2}[" + dateSeps + "][0-9]{1,2}$";
+		
+		Pattern patternA = Pattern.compile(formatA);
+		Pattern patternB = Pattern.compile(formatB);
+		
+		Calendar[] calendars = new Calendar[data.size()];
+		for(int i = 0; i < data.size(); i++) {
+			Object dataPt = data.get(i)[column];
+			if (dataPt == null) { //Ignore empty dates
+				calendars[i] = null;
+				continue;
+			}
+			
+			String s = null;
+			if (dataPt.getClass() == java.lang.String.class) {
+				s = (String)dataPt;
+			}else{
+				return false;
+			}
+			
+			Matcher matcherA = patternA.matcher(s);
+			Matcher matcherB = patternB.matcher(s);
+			boolean matchA = matcherA.find();
+			boolean matchB = matcherB.find();
+			
+			if (matchA || matchB) { //If one of the date formats is matched by the current string,
+				//create a new Calendar
+				//System.out.println("Date matched: " + s);
+				
+				int month = 0;
+				int dayOfMonth = 0;
+				int year = 0;
+				if (matchA) {
+					String sep = "" + s.charAt(2);
+					String[] dateParts = s.split(sep);
+					month = Integer.parseInt(dateParts[0]) - 1;
+					dayOfMonth = Integer.parseInt(dateParts[1]);
+					year = Integer.parseInt(dateParts[2]);
+				}else if (matchB) {
+					String sep = "" + s.charAt(4);
+					String[] dateParts = s.split(sep);
+					year = Integer.parseInt(dateParts[0]);
+					month = Integer.parseInt(dateParts[1]) - 1;
+					dayOfMonth = Integer.parseInt(dateParts[2]);
+				}
+				calendars[i] = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
+				calendars[i].set(Calendar.DAY_OF_MONTH, dayOfMonth);
+				calendars[i].set(Calendar.MONTH, month);
+				calendars[i].set(Calendar.YEAR, year);
+				System.out.println(calendars[i]);
+			}else { //If none of the date formats is matched
+				return false;
+			}
+		}
+		
+		/*If the program gets to this point, it means that all data points could be successfully converted
+		 * to Calendars. Therefore, assign all of the data points a Calendar value
+		 */
+		for(int i = 0; i < data.size(); i++) {
+			data.get(i)[column] = calendars[i];
+		}
+		
+		fieldUsesDate[column] = true;
+		return true;
+	}
+		
+	private boolean attemptConversionToTime(int column) {
+		
+		/* If every non-null item in data[:,column] can be converted into a Calendar time, do the
+		 * conversions and return true. Otherwise, return false, without doing any of the conversions.
+		 */
+		
+		System.out.println("attemptConversionToTime()");
+		String formatA = "^[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}$";
+		String formatB = "^[0-9]{1,2}:[0-9]{1,2}$";
+		
+		Pattern patternA = Pattern.compile(formatA);
+		Pattern patternB = Pattern.compile(formatB);
+		
+		Calendar[] calendars = new Calendar[data.size()];
+		for(int i = 0; i < data.size(); i++) {
+			Object dataPt = data.get(i)[column];
+			if (dataPt == null) { //Ignore empty dates
+				calendars[i] = null;
+				continue;
+			}
+			
+			String s = null;
+			if (dataPt.getClass() == java.lang.String.class) {
+				s = (String)dataPt;
+			}else{
+				return false;
+			}
+			
+			Matcher matcherA = patternA.matcher(s);
+			Matcher matcherB = patternB.matcher(s);
+			boolean matchA = matcherA.find();
+			boolean matchB = matcherB.find();
+			
+			if (matchA || matchB) { //If one of the time formats is matched by the current string,
+				//create a new Calendar
+				
+				String[] timeParts = s.split(":");
+				Integer hours = Integer.parseInt(timeParts[0]);
+				Integer minutes = Integer.parseInt(timeParts[1]);
+				Integer seconds = null;
+				if (matchA) {
+					seconds = Integer.parseInt(timeParts[2]);
+				}
+				
+				calendars[i] = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
+				calendars[i].set(Calendar.HOUR, hours);
+				calendars[i].set(Calendar.MINUTE, minutes);
+				if (seconds != null) {
+					calendars[i].set(Calendar.SECOND, seconds);
+				}
+				calendars[i].set(Calendar.MILLISECOND, 0);
+			}else { //If none of the date formats is matched
+				return false;
+			}
+		}
+		
+		/*If the program gets to this point, it means that all data points could be successfully converted
+		 * to Calendars. Therefore, assign all of the data points a Calendar value
+		 */
+		for(int i = 0; i < data.size(); i++) {
+			data.get(i)[column] = calendars[i];
+		}
+		
+		fieldUsesDate[column] = false;
+		return true;
+	}
+	
 	private BufferedDataTable dataToDataTable() {
 		
 		System.out.println("Converting to data table...");
@@ -119,55 +283,92 @@ public class QvxBinaryReader {
 			//Get the type of dataPt and create the appropriate cell type
 			Class dataClass = dataPt.getClass();
 			if(dataClass.equals(java.lang.Double.class) || usesFixedPointDecimals(fieldHeaders.get(i))) {
+				dataTypes[i] = isIntegerColumn(i) ? IntCell.TYPE : DoubleCell.TYPE;
+			}else if (usesFixedPointDecimals(fieldHeaders.get(i))) {
 				dataTypes[i] = DoubleCell.TYPE;
 			}else if(dataClass.equals(java.lang.Integer.class)){
 				dataTypes[i] = IntCell.TYPE;
 			}else if(dataClass.equals(java.lang.String.class)) {
-				dataTypes[i] = StringCell.TYPE;
+				dataTypes[i] = attemptConversionToDateOrTime(i) ? DateAndTimeCell.TYPE : StringCell.TYPE;
 			}else if(dataClass.equals(java.util.GregorianCalendar.class)){
-				//Check if it is date/date-time
 				dataTypes[i] = DateAndTimeCell.TYPE;
 			}else {
 				throw new RuntimeException("Unknown data type: " + dataClass);
 			}
 		}
 		
+		System.out.println("Writing data table...");
 		DataColumnSpec[] columnSpecs = DataTableSpec.createColumnSpecs(fieldNames, dataTypes);
 		DataTableSpec spec = new DataTableSpec(columnSpecs);
 		BufferedDataContainer buf = exec.createDataContainer(spec);
-		DataRow [] dataRows = new DataRow[numRows];
-		
 		for (int i = 0; i < numRows; i++) {
+			System.out.println("\nrow: " + i);
 		    DataCell[] cells = new DataCell[numCols];
 		    for (int j = 0; j < numCols; j++) {
 		    	Object dataPt = data.get(i)[j];
+		    	System.out.println(dataPt);
 		    	if (dataPt == null) {
 		    		cells[j] = new MissingCell("");
 		    		continue;
 		    	}
-		    	Class dataClass = dataPt.getClass();
-		    	if (dataClass.equals(java.lang.Integer.class)) {
+
+		    	if (dataTypes[j].equals(IntCell.TYPE)) {
 		    		cells[j] = new IntCell((int)dataPt);
-		    	}else if(dataClass.equals(java.lang.Double.class)) {
+		    	}else if(dataTypes[j].equals(DoubleCell.TYPE)) {
 		    		cells[j] = new DoubleCell((double)dataPt);
-		    	}else if(dataClass.equals(java.lang.String.class)) {
-		    		cells[j] = new StringCell((String)dataPt);
-		    	}else if(dataClass.equals(java.util.GregorianCalendar.class)){
+		    	}else if(dataTypes[j].equals(StringCell.TYPE)) {
+		    		cells[j] = new StringCell(objectToString(dataPt));
+		    	}else if(dataTypes[j].equals(DateAndTimeCell.TYPE)) {
 		    		Calendar cal = (Calendar)dataPt;
-		    		System.out.println("Calendar: " + cal.getTime());
-		    		cells[j] = getCorrectDateAndTimeCell(cal, fieldAttrTypes[j]);
+		    		cells[j] = getCorrectDateAndTimeCell(cal, fieldAttrTypes[j], j);
 				}else {
-					throw new RuntimeException("Unknown data type: " + dataClass);
+					throw new RuntimeException("Unknown data type: " + dataTypes[j]);
 
 				}
 		    }
 		    DataRow row = new DefaultRow("RowKey_" + i, cells);
 		    buf.addRowToTable(row);
-		    //dataRows[i] = row;
 		}
 		buf.close();
 		BufferedDataTable table = buf.getTable();
+
 		return table;
+	}
+	
+	private boolean isIntegerColumn(int column) {
+		
+		//Return true if this data[:,column] can be converted to an integer column, false otherwise
+		
+		for(int i = 0; i < data.size(); i++) {
+			try {
+				Object obj = data.get(i)[column];
+				if (obj == null) {
+					continue;
+				}
+				
+				double dValue = (double)obj;
+				int iValue = (int)dValue;
+				if (dValue != iValue) {
+					return false;
+				}
+			}catch(ClassCastException e) {
+				return false;
+			}
+		}
+		
+		//Cast all of the double values to integers
+		for(int i = 0; i < data.size(); i++) {
+			Object obj = data.get(i)[column];
+			if (obj == null) {
+				continue;
+			}
+			
+			double dValue = (double)obj;
+			int iValue = (int)dValue;
+			data.get(i)[column] = iValue;
+		}
+		
+		return true;
 	}
 	
 	private void readQvxTableHeader() {
@@ -248,28 +449,31 @@ public class QvxBinaryReader {
 			//Read each field in the row
 			for(int i = 0; i < numFields; i++) {
 				QvxFieldHeader fieldHeader = qvxTableHeader.getFields().getQvxFieldHeader().get(i);
-				QvxNullRepresentation nullRepresentation = fieldHeader.getNullRepresentation();
-				switch(nullRepresentation) {
-				
-				case QVX_NULL_FLAG_SUPPRESS_DATA:
-					byte nullFlag = readBytesFromBuffer(1)[0];
-					if (nullFlag == 0) {
+				QvxFieldType fieldType = fieldHeader.getType();
+				if (!fieldType.equals(QVX_QV_DUAL)) {
+					QvxNullRepresentation nullRepresentation = fieldHeader.getNullRepresentation();
+					switch(nullRepresentation) {
+					
+					case QVX_NULL_FLAG_SUPPRESS_DATA:
+						byte nullFlag = readBytesFromBuffer(1)[0];
+						if (nullFlag == 0) {
+							row[i] = readValueFromBuffer(fieldHeader);
+						}else if (nullFlag == 1) { //Null flag of 1 means a field value is not used
+							row[i] = null;
+						}else {
+							throw new RuntimeException("Unrecognized QVX_NULL_FLAG_SUPPRESS_DATA flag: " +
+									nullFlag);
+						}
+						break;
+					case QVX_NULL_NEVER:
 						row[i] = readValueFromBuffer(fieldHeader);
-						//System.out.println("value: " + row[i]);
-					}else if (nullFlag == 1) { //Null flag of 1 means a field value is not used
-						System.out.println("null value found");
-						row[i] = null;
-					}else {
-						throw new RuntimeException("Unrecognized QVX_NULL_FLAG_SUPPRESS_DATA flag: " +
-								nullFlag);
+						System.out.println("value: " + row[i]);
+						break;
+					default:
+						throw new RuntimeException("Unrecognized null representation: " + nullRepresentation);
 					}
-					break;
-				case QVX_NULL_NEVER:
+				} else { //QVX_QV_DUAL is used; readValueFromBuffer deals with the QvxQvSpecialFlag
 					row[i] = readValueFromBuffer(fieldHeader);
-					System.out.println("value: " + row[i]);
-					break;
-				default:
-					throw new RuntimeException("Unrecognized null representation: " + nullRepresentation);
 				}
 			}
 			data.add(row);
@@ -280,7 +484,7 @@ public class QvxBinaryReader {
 			if (readBytesFromBuffer(1)[0] != FS_BYTE) {
 				throw new RuntimeException("File separator byte is expected");
 			}
-		}		
+		}	
 	}
 	
 	private Object readValueFromBuffer(QvxFieldHeader fieldHeader) {
@@ -337,7 +541,7 @@ public class QvxBinaryReader {
 		
 		byte flag = readBytesFromBuffer(1)[0];
 		if (flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_NULL.getValue()) {
-			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+			return null;
 			
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_INT.getValue()) {
 			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
@@ -345,7 +549,6 @@ public class QvxBinaryReader {
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE.getValue()){
 			ByteOrder byteOrder = fieldHeader.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
 			Object value = ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getDouble();
-			System.out.println("qvx_qv_special_double: original value: " + value);
 			return applyFieldAttr(value, fieldHeader);
 			
 		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_STRING.getValue()) {
@@ -413,23 +616,17 @@ public class QvxBinaryReader {
 	}
 	
 	private Object applyFieldAttr(Object data, QvxFieldHeader fieldHeader) {
-		
-		//System.out.println("applying field formatting...");
-		
+				
 		Object returnVal = null;
 		//Debugging code
 		QvxFieldType type = fieldHeader.getType();
-		System.out.print("Type: " + type);
 		
 		//If there is no formatting for this field, return the original data
 		if (fieldHeader.getFieldFormat() == null || fieldHeader.getFieldFormat().getType() == null) {
-			System.out.println(", Format: None");
 			returnVal = data;
 		}else {	
-			FieldAttrType fieldAttrType = fieldHeader.getFieldFormat().getType();
-			System.out.println(", Format: " + fieldAttrType);
-			
-			if (fieldAttrType == FieldAttrType.FIX || fieldAttrType == FieldAttrType.REAL) {
+			FieldAttrType fieldAttrType = fieldHeader.getFieldFormat().getType();			
+			if (fieldAttrType == FIX || fieldAttrType == REAL) {
 				
 				try {
 					data = (double)data;
@@ -444,7 +641,7 @@ public class QvxBinaryReader {
 				}
 				returnVal = Math.round((double)data * Math.pow(10, nDec))/Math.pow(10, nDec);
 				
-			}else if (fieldAttrType == FieldAttrType.MONEY) {
+			}else if (fieldAttrType == MONEY) {
 				
 				try {
 					data = (double)data;
@@ -453,13 +650,26 @@ public class QvxBinaryReader {
 					return data;
 				}
 				returnVal = Math.round((double)data * 100.0) / 100.0;
-			}else if (fieldAttrType == FieldAttrType.DATE || fieldAttrType == FieldAttrType.INTERVAL || fieldAttrType == FieldAttrType.TIME
-					|| fieldAttrType == FieldAttrType.TIMESTAMP ) {
+			}else if (fieldAttrType == DATE || fieldAttrType == INTERVAL || fieldAttrType == TIME
+					|| fieldAttrType == TIMESTAMP ) {
 				
-				if (type == QvxFieldType.QVX_QV_DUAL) {
-					System.out.println("Qvx Dual date: " + data);
-					Calendar cal = Util.getDateFromQvxReal((double) data);
-					System.out.println("Calendar: " + cal.getTime());
+				if (type == QVX_QV_DUAL) { 
+					Calendar cal = null;
+					try {
+						//It is expected that value is a double that represents days since 1900
+						cal = getDateFromQvxReal((double)data); 
+					}catch(ClassCastException e1) {
+						try {
+							cal = getDateFromString((String)data);
+						}catch(ClassCastException e2) {
+							return null;
+						}
+					}catch(Exception e) {
+						System.out.println("Other exception");
+						e.printStackTrace();
+					}
+					
+					//System.out.println("Calendar: " + cal.getTime());
 					return cal;
 				}else {
 					System.out.println("WARNING: Unimplemented QvxFieldType-FieldAttrType combination: " +
@@ -474,14 +684,18 @@ public class QvxBinaryReader {
 		
 		//Apply fixPointDecimals if it has a non-zero integer value
 		QvxFieldType fieldType = fieldHeader.getType();
-		if (fieldType == QvxFieldType.QVX_SIGNED_INTEGER || fieldType == QvxFieldType.QVX_UNSIGNED_INTEGER) {
+		if (fieldType == QVX_SIGNED_INTEGER || fieldType == QVX_UNSIGNED_INTEGER
+			|| fieldType == QVX_QV_DUAL)
+		{
 			if (usesFixedPointDecimals(fieldHeader)) {
+				int fixPointDecimals = fieldHeader.getFixPointDecimals().intValue();
 				if (returnVal.getClass().equals(java.lang.Integer.class)) {
-					int fixPointDecimals = fieldHeader.getFixPointDecimals().intValue();
 					System.out.println("integer with fixed pt found");
 					double dReturnVal = Double.parseDouble(Integer.toString((int)returnVal));
 					System.out.println("converted to double");
 					return dReturnVal / Math.pow(10.0, fixPointDecimals);
+				}else if (returnVal.getClass().equals(java.lang.Double.class)) {
+					return (double)returnVal / Math.pow(10.0, fixPointDecimals);
 				}
 			}
 		}
@@ -493,26 +707,23 @@ public class QvxBinaryReader {
 		return fixPointDecimals != null && fixPointDecimals.intValue() != 0;
 	}
 	
-	private DateAndTimeCell getCorrectDateAndTimeCell(Calendar cal, FieldAttrType fieldAttrType) {
+	private DateAndTimeCell getCorrectDateAndTimeCell(
+		Calendar cal, FieldAttrType fieldAttrType, int column)
+	{
 		
-		switch (fieldAttrType) {
-		case DATE:
-			System.out.println("Type is date");
+		if (fieldAttrType.equals(DATE) || (fieldUsesDate[column] != null && fieldUsesDate[column])) {
 			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
 					cal.get(Calendar.DAY_OF_MONTH));
-		case TIMESTAMP:
-			System.out.println("Type is timestamp");
+		}else if (fieldAttrType.equals(TIMESTAMP)) {
 			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
 					cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
-					cal.get(Calendar.SECOND));
-		case INTERVAL:
-			System.out.println("Type is interval");
+					cal.get(Calendar.SECOND), cal.get(Calendar.MILLISECOND));
+		}else if (fieldAttrType.equals(INTERVAL) || fieldAttrType.equals(TIME)
+					|| (fieldUsesDate[column] != null  && !fieldUsesDate[column])) {
 			return new DateAndTimeCell(cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
 					cal.get(Calendar.SECOND), cal.get(Calendar.MILLISECOND));
-		default:
+		}else {
 			throw new RuntimeException("Unimplemented field attribute type: " + fieldAttrType);
 		}
 	}
-
-
 }
