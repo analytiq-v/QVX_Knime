@@ -81,7 +81,7 @@ public class QvxFileReaderNodeSettings extends TokenizerSettings {
                         + "' missing!", ice);
             }
 
-        } // if (cfg != null)
+        }
     }
 
 
