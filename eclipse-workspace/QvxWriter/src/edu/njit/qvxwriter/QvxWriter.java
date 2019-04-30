@@ -1,9 +1,7 @@
 package edu.njit.qvxwriter;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -21,8 +19,6 @@ import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.node.BufferedDataTable;
 
 import edu.njit.qvx.FieldAttrType;
@@ -30,7 +26,6 @@ import edu.njit.qvx.FieldAttributes;
 import edu.njit.qvx.QvxFieldExtent;
 import edu.njit.qvx.QvxFieldType;
 import edu.njit.qvx.QvxNullRepresentation;
-import edu.njit.qvx.QvxQvSpecialFlag;
 import edu.njit.qvx.QvxTableHeader;
 import edu.njit.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 
@@ -49,7 +44,6 @@ import static edu.njit.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_NULL;
 import static edu.njit.util.Util.combineByteArrays;
 import static edu.njit.util.Util.dateToDaysSince;
 import static edu.njit.util.Util.timeToDaysSince;
-import static edu.njit.util.Util.removeSuffix;
 
 public class QvxWriter {
 	
@@ -76,11 +70,6 @@ public class QvxWriter {
 		this.outFileName = outFileName;
 		this.settings = settings;
 		
-		System.out.println(Arrays.toString(fieldNames));
-		for(int i = 0; i < data.length; i++) {
-			System.out.println(Arrays.toString(data[i]));
-		}
-		
 		configureTableHeader();
 		writeTableHeader();
 		writeBody();
@@ -92,17 +81,17 @@ public class QvxWriter {
 		
     	tableHeader.setMajorVersion(BigInteger.valueOf(1));
 		tableHeader.setMinorVersion(BigInteger.valueOf(0));
-		//Set the date //TODO: Data format for now is not completely correct; fix
+		
+		//Set CreateUTCTime
 		GregorianCalendar calendar = new GregorianCalendar();
-				calendar.setTime(new Date());
-				try {
-					tableHeader.setCreateUtcTime(DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar));
-				}
-				catch(DatatypeConfigurationException e) { e.printStackTrace(); }
+		calendar.setTime(new Date());
+		try {
+			tableHeader.setCreateUtcTime(DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar));
+		}catch(DatatypeConfigurationException e) {};
 				
     	tableHeader.setTableName(settings.getTableName());
     	tableHeader.setUsesSeparatorByte(settings.getUsesSeparatorByte());
-    	tableHeader.setBlockSize(BigInteger.valueOf(1)); //TODO: 1 by default; value should be based on a node setting
+    	tableHeader.setBlockSize(BigInteger.valueOf(1));
     	
     	configureTableHeaderFields();
     }
@@ -112,7 +101,7 @@ public class QvxWriter {
 		QvxTableHeader.Fields fields = new QvxTableHeader.Fields();
 		for(int i = 0; i < fieldNames.length; i++) {
 			
-			/* Create a QvxFieldHeader for each field */
+			// Create a QvxFieldHeader for each field
 			QvxTableHeader.Fields.QvxFieldHeader qvxFieldHeader = new QvxTableHeader.Fields.QvxFieldHeader();
 			
 			qvxFieldHeader.setFieldName(fieldNames[i]);
@@ -213,14 +202,14 @@ public class QvxWriter {
 				outputStream.write(FILE_SEPARATOR);
 			}
 			outputStream.close();
-		}catch(IOException e) {
-			e.printStackTrace();
-		}
+		}catch(IOException e) {};
 	}
 
 	//Helper methods --------------------------------------------------
 	
 	private byte[] convertToByteValue(QvxFieldHeader fieldHeader, String s) {
+		
+		//Convert the data, s, into a byte value that is consistent with fieldHeader
 		
 		int byteWidth = fieldHeader.getByteWidth().intValue();
 		ByteBuffer byteBuffer = null;
@@ -259,6 +248,9 @@ public class QvxWriter {
 	
 	private String[][] dataTableToArray(BufferedDataTable table){
 		
+		/*Converts KNIME data table into String array. The elements in the string array will later be
+		  converted to the appropriate byte value, depending on the specified Qvx Table Header */
+		
 		final int numRows = (int)table.size();
 		final int numColumns = table.getSpec().getNumColumns();
 		
@@ -284,9 +276,7 @@ public class QvxWriter {
 	
 	private double dateTimeToDouble(QvxFieldHeader fieldHeader, String sDate) {
 		
-		System.out.println("dateTimeToDouble(" + sDate + ")");
 		FieldAttrType fieldAttrType = fieldHeader.getFieldFormat().getType();
-		System.out.println("fieldAttrType: " + fieldAttrType);
 		
 		// Extract the date and time parts from the combined date-time string
 		String datePart = null;
@@ -302,10 +292,7 @@ public class QvxWriter {
 				datePart = sDate;
 			}
 		}
-		
-		System.out.println("date part: " + datePart);
-		System.out.println("time part: " + timePart);
-		
+				
 		switch (fieldAttrType) {
 		case DATE:
 			if (datePart != null)
@@ -383,7 +370,6 @@ public class QvxWriter {
 	
 	private void setFieldAttributes(QvxFieldHeader fieldHeader, int columnIndex) {
 		
-		//TODO: Deal with "Interval" FieldAttrType
 		FieldAttributes fieldAttributes = new FieldAttributes();
 		FieldAttrType attrType = null;
 		try {
@@ -432,8 +418,7 @@ public class QvxWriter {
 				lowerBound = Integer.parseInt(columnSpec.getDomain().getLowerBound().toString());
 				upperBound = Integer.parseInt(columnSpec.getDomain().getUpperBound().toString());
 			}catch(NumberFormatException e) {
-				throw new RuntimeException("support for longs not added (uncertain about how KNIME"
-						+ "works with long values);" + e);
+				throw new RuntimeException("Longs are not suppported by Qvx Writer");
 			}
 			
 			if (lowerBound < 0) {
@@ -456,6 +441,9 @@ public class QvxWriter {
 	
 	private byte[] stringToByteArray_zeroTerminated(QvxFieldHeader fieldHeader, String s) {
 		
+		/*Convert String to byte array, with a zero byte at the end of the array. The format of this
+		  array depending on the code page specified */
+		
 		Integer codePage = null;
 		if(fieldHeader.getCodePage() != null) {
 			codePage = fieldHeader.getCodePage().intValue();
@@ -469,9 +457,8 @@ public class QvxWriter {
 			bytes[bytes.length-1] = (byte)0; //Zero-terminated byte
 			return bytes;
 		}else if (codePage == 1020 || codePage == 1021) { //UTF-16
-			//TODO
-			throw new IllegalStateException("UTF-16 is not supported");
+			throw new IllegalStateException("UTF-16 is not supported by Qvx Writer");
 		}
-		throw new IllegalStateException("Code page " + codePage + " is not supported");
+		throw new IllegalStateException("Code page " + codePage + " is not supported by Qvx Writer");
 	}
 }

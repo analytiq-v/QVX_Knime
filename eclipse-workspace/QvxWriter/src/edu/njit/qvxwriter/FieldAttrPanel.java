@@ -39,9 +39,7 @@ class FieldAttrPanel extends JPanel {
 	}
 	
 	void saveSettingsInto(final QvxWriterNodeSettings settings) {
-		
-		System.out.println("FieldAttrPanel: saveSettingsInto");
-		
+				
 		String[] columnNames = new String[columnNameFields.length];
 		for(int i = 0; i < columnNames.length; i++) {
 			columnNames[i] = columnNameFields[i].getText();
@@ -51,13 +49,11 @@ class FieldAttrPanel extends JPanel {
 		for(int i = 0; i < selectedFieldAttrs.length; i++) {
 			selectedFieldAttrs[i] = (String)attributeSelects[i].getSelectedItem();
 		}
-		System.out.println("saveSettingsInto: selectedFieldAttr: " + Arrays.toString(selectedFieldAttrs));
 		
 		int[] selectedNDecs = new int[nDecSpinners.length];
 		for(int i = 0; i < selectedNDecs.length; i++) {
 			selectedNDecs[i] = (int)nDecSpinners[i].getValue();
 		}
-		System.out.println("saveSettingsInto: selectedNDecs: " + Arrays.toString(selectedNDecs));
 		
 		settings.setDataTableColumns(columnNames);
 		settings.setSelectedFieldAttrs(selectedFieldAttrs);
@@ -213,8 +209,7 @@ class FieldAttrPanel extends JPanel {
 					FieldAttrType.TIME.value(),
 					FieldAttrType.UNKNOWN.value()
 			};
-		}else {
-			System.out.println("Unknown type: " + type);
+		}else { //Unknown type
 			return null;
 		}
 		//
@@ -239,7 +234,7 @@ class FieldAttrPanel extends JPanel {
 			return FieldAttrType.TIME.value();
 		}else if (type.equals("Date and Time")) { //Legacy date-time format
 			return FieldAttrType.TIMESTAMP.value();
-		}else {
+		}else { //Unknown type
 			return null;
 		}
 	}

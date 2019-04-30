@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
 import java.io.File;
-import java.util.Arrays;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -118,14 +117,12 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         JScrollPane scrollPane = new JScrollPane(fieldAttributesPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setPreferredSize(new Dimension((int)(SCREEN_WIDTH/5), (int)(SCREEN_HEIGHT/5)));
-        addTab("Field Attributes", scrollPane);
-                
-        System.out.println("Settings dimension: " + settingsPanel.getPreferredSize());     
+        addTab("Field Attributes", scrollPane);                
     }
     
 	@Override
 	protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
-		System.out.println("NodeDialog: saveSettingsTo()");
+
 		QvxWriterNodeSettings m_settings = new QvxWriterNodeSettings();
 	
 		//fileName
@@ -152,21 +149,12 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 	protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
 		
-		System.out.println(specs.length);
-		System.out.println(Arrays.toString(specs[0].getColumnNames()));
-		for(int i = 0; i < specs[0].getNumColumns(); i++)
-			System.out.println("Data type: " + specs[0].getColumnSpec(i).getType().getCellClass());
-
-		
-		System.out.println("NodeDialog: loadSettingsFrom()");
-		try {	
+		try {
+			//fileName
 			String fileName = settings.getString(QvxWriterNodeSettings.CFGKEY_FILE_NAME);
-			System.out.println("loadSettingsFrom: fileName");
 			String overwritePolicy = settings.getString(
 					QvxWriterNodeSettings.CFGKEY_OVERWRITE_POLICY);			
-			System.out.println("loadSettingsFrom: overwritePolicy");
 
-			//fileName
 			filesHistoryPanel.setSelectedFile(fileName);
 			
 			//overwritePolicy
@@ -176,7 +164,6 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 				overwritePolicy_overwriteButton.setSelected(true);
 			}
 			
-			System.out.println("loadSettingsFrom: creating other panels");
 			advancedPanel.loadValuesIntoPanel(settings);
 			fieldAttributesPanel.loadValuesIntoPanel(settings, specs[0]);
 			tableNamePanel.loadValuesIntoPanel(settings);

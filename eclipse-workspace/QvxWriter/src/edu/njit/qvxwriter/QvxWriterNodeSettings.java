@@ -4,8 +4,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-import edu.njit.qvx.FieldAttrType;
-
 public class QvxWriterNodeSettings {
 
 	 /** the settings key which is used to retrieve and 
