@@ -14,7 +14,6 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -40,13 +39,11 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 
-import edu.njit.knime.adapter.nodes.qvx.QvxReaderNodeSettings;
 import edu.njit.knime.adapter.qvx.FieldAttrType;
 import edu.njit.knime.adapter.qvx.FieldAttributes;
 import edu.njit.knime.adapter.qvx.QvxFieldExtent;
 import edu.njit.knime.adapter.qvx.QvxFieldType;
 import edu.njit.knime.adapter.qvx.QvxNullRepresentation;
-import edu.njit.knime.adapter.qvx.QvxQvSpecialFlag;
 import edu.njit.knime.adapter.qvx.QvxTableHeader;
 import edu.njit.knime.adapter.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 
@@ -60,7 +57,12 @@ import static edu.njit.knime.adapter.qvx.FieldAttrType.TIMESTAMP;
 import static edu.njit.knime.adapter.qvx.QvxFieldType.QVX_QV_DUAL;
 import static edu.njit.knime.adapter.qvx.QvxFieldType.QVX_SIGNED_INTEGER;
 import static edu.njit.knime.adapter.qvx.QvxFieldType.QVX_UNSIGNED_INTEGER;
-import static edu.njit.knime.adapter.nodes.qvx.Util.combineByteArrays;
+import static edu.njit.knime.adapter.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE;
+import static edu.njit.knime.adapter.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE_AND_STRING;
+import static edu.njit.knime.adapter.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_INT;
+import static edu.njit.knime.adapter.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_INT_AND_STRING;
+import static edu.njit.knime.adapter.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_NULL;
+import static edu.njit.knime.adapter.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_STRING;
 import static edu.njit.knime.adapter.nodes.qvx.Util.getDateFromQvxReal;
 import static edu.njit.knime.adapter.nodes.qvx.Util.getDateFromString;
 import static edu.njit.knime.adapter.nodes.qvx.Util.objectToString;
@@ -83,8 +85,10 @@ public class QvxBinaryReader {
 	private int bufferIndex = 0;
 	private int zeroByteIndex;
 	private List<Object[]> data = new ArrayList<>();
-	private Boolean fieldUsesDate[]; //For each field, this value is true if it should be stored in KNIME
-	//as a date, false if it should be stored as time or some other format
+	
+	/*For each field, this value is true if it should be stored in KNIME as a date,
+	  false if it should be stored as time or some other format, and null if neither date nor time */
+	private Boolean fieldUsesDate[];
 	
 	QvxBinaryReader(){
 		
@@ -100,11 +104,6 @@ public class QvxBinaryReader {
 		
 		fieldUsesDate = new Boolean[data.size()];
 		
-		System.out.println(Arrays.toString(fieldNames));
-		for(int i = 0; i < data.size() && i < 10; i++) {
-			System.out.println(Arrays.toString(data.get(i)));
-		}
-		
 		return new BufferedDataTable[] {dataToDataTable()};
 	}
 	
@@ -119,7 +118,6 @@ public class QvxBinaryReader {
 		 * conversions and return true. Otherwise, return false, without doing any of the conversions.
 		 */
 		
-		System.out.println("attemptConversionToDate()");
 		String dateSeps = "-/";
 		String formatA = "^[0-9]{1,2}[" + dateSeps + "][0-9]{1,2}[" + dateSeps + "][0-9]{4}$";
 		String formatB = "^[0-9]{4}[" + dateSeps + "][0-9]{1,2}[" + dateSeps + "][0-9]{1,2}$";
@@ -147,9 +145,8 @@ public class QvxBinaryReader {
 			boolean matchA = matcherA.find();
 			boolean matchB = matcherB.find();
 			
-			if (matchA || matchB) { //If one of the date formats is matched by the current string,
-				//create a new Calendar
-				//System.out.println("Date matched: " + s);
+			if (matchA || matchB) {
+				//If one of the date formats is matched by the current string, create a new Calendar
 				
 				int month = 0;
 				int dayOfMonth = 0;
@@ -171,7 +168,6 @@ public class QvxBinaryReader {
 				calendars[i].set(Calendar.DAY_OF_MONTH, dayOfMonth);
 				calendars[i].set(Calendar.MONTH, month);
 				calendars[i].set(Calendar.YEAR, year);
-				//System.out.println(calendars[i]);
 			}else { //If none of the date formats is matched
 				return false;
 			}
@@ -194,7 +190,6 @@ public class QvxBinaryReader {
 		 * conversions and return true. Otherwise, return false, without doing any of the conversions.
 		 */
 		
-		//System.out.println("attemptConversionToTime()");
 		String formatA = "^[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}$";
 		String formatB = "^[0-9]{1,2}:[0-9]{1,2}$";
 		
@@ -221,8 +216,8 @@ public class QvxBinaryReader {
 			boolean matchA = matcherA.find();
 			boolean matchB = matcherB.find();
 			
-			if (matchA || matchB) { //If one of the time formats is matched by the current string,
-				//create a new Calendar
+			if (matchA || matchB) {
+				//If one of the time formats is matched by the current string, create a new Calendar
 				
 				String[] timeParts = s.split(":");
 				Integer hours = Integer.parseInt(timeParts[0]);
@@ -257,7 +252,8 @@ public class QvxBinaryReader {
 	
 	private BufferedDataTable dataToDataTable() {
 		
-		System.out.println("Converting to data table...");
+		//Convert object array (which was read from qvx file) into a KNIME data table
+		
 		int numRows = data.size();
 		int numCols = data.get(0).length;
 		
@@ -303,16 +299,14 @@ public class QvxBinaryReader {
 			}
 		}
 		
-		System.out.println("Writing data table...");
+		//Start creating the KNIME data by iterating through the data
 		DataColumnSpec[] columnSpecs = DataTableSpec.createColumnSpecs(fieldNames, dataTypes);
 		DataTableSpec spec = new DataTableSpec(columnSpecs);
 		BufferedDataContainer buf = exec.createDataContainer(spec);
 		for (int i = 0; i < numRows; i++) {
-			//System.out.println("\nrow: " + i);
 		    DataCell[] cells = new DataCell[numCols];
 		    for (int j = 0; j < numCols; j++) {
 		    	Object dataPt = data.get(i)[j];
-		    	System.out.println(dataPt);
 		    	if (dataPt == null) {
 		    		cells[j] = new MissingCell("");
 		    		continue;
@@ -332,7 +326,7 @@ public class QvxBinaryReader {
 
 				}
 		    }
-		    DataRow row = new DefaultRow("RowKey_" + i, cells);
+		    DataRow row = new DefaultRow("Row_" + i, cells);
 		    buf.addRowToTable(row);
 		}
 		buf.close();
@@ -343,7 +337,9 @@ public class QvxBinaryReader {
 	
 	private boolean isIntegerColumn(int column) {
 		
-		//Return true if this data[:,column] can be converted to an integer column, false otherwise
+		/* If every non-null item in data[:,column] can be converted into a an integer value, do the
+		 * conversions and return true. Otherwise, return false, without doing any of the conversions.
+		 */
 		
 		for(int i = 0; i < data.size(); i++) {
 			try {
@@ -383,11 +379,9 @@ public class QvxBinaryReader {
 		 * zero-byte
 		 */
 		
-		System.out.println("reading from qvx table header...");
-
+		// Read the entire "inFileName" into a buffer, from either the local file system or internet
 		inputStream = null;
 		try {
-			// Read the entire "inFileName" into a byte[] buffer
 			
 			try { //Try attempting to read file from local file system
 				inputStream = new FileInputStream(inFileName);
@@ -395,7 +389,8 @@ public class QvxBinaryReader {
 				//Set bufferSize
 				File f = new File(inFileName);
 				bufferSize = (int)f.length();
-				if (bufferSize < f.length()) { //The case when narrowing conversion causes loss of data
+				if (bufferSize < f.length()) {
+					// If bufferSize is not appropriate; theoretically, should never happen
 					inputStream.close();
 					throw new RuntimeException("Expected file size does not match actual size");
 				}
@@ -403,7 +398,8 @@ public class QvxBinaryReader {
 				//Read "inFileName" into "buffer"
 				buffer = new byte[bufferSize];
 				int bytesRead = inputStream.read(buffer);
-				if (bytesRead != bufferSize || inputStream.read() != -1) { // If bufferSize is not appropriate; theoretically, should never happen
+				if (bytesRead != bufferSize || inputStream.read() != -1) {
+					// If bufferSize is not appropriate; theoretically, should never happen
 					inputStream.close();
 					throw new RuntimeException("Expected file size does not match actual size");
 				}
@@ -412,6 +408,11 @@ public class QvxBinaryReader {
 				try{
 					if (inFileName.startsWith("http")) {
 						inputStream = new BufferedInputStream(new URL(inFileName).openStream());
+						
+						/*Keep reading bytes from inputStream until the inputStream ends; store these bytes
+						in "bytes", then add every item in bytes to a large "buffer" array. This simulates
+						the act of reading the entire file into one buffer with a single read statement.*/
+						
 						List<byte[]> bytes = new ArrayList<byte[]>();
 						int totalLength = 0;
 						int numRead = 0;
@@ -422,10 +423,9 @@ public class QvxBinaryReader {
 							bytes.add(currBuffer.clone());
 							totalLength += numRead;
 						}
-						bytes.set(bytes.size()-1, Arrays.copyOfRange(bytes.get(bytes.size()-1), 0, previousRead));
-						
+						bytes.set(bytes.size()-1, Arrays.copyOfRange(
+							bytes.get(bytes.size()-1), 0, previousRead));		
 						bufferSize = totalLength;
-						System.out.println("buffer size: " + bufferSize);
 						buffer = new byte[totalLength];
 						
 						int idx = 0;
@@ -439,7 +439,7 @@ public class QvxBinaryReader {
 						throw new FileNotFoundException("File not found: " + inFileName);
 					}
 				}catch(FileNotFoundException e2) {
-					e2.printStackTrace();
+					throw new FileNotFoundException("File not found: " + inFileName);
 				}
 			}
 			
@@ -470,21 +470,16 @@ public class QvxBinaryReader {
 		
 		/* Reads the body of the qvx file and populates "data"
 		 */
-		
-		System.out.println("reading from body...");
-		
+				
 		boolean usesSeparatorByte = qvxTableHeader.isUsesSeparatorByte();
 		int endOfRecords = usesSeparatorByte ? buffer.length - 1 : buffer.length;
 		
 		int numFields = qvxTableHeader.getFields().getQvxFieldHeader().size();
 		bufferIndex = zeroByteIndex + 1; //Starting index of the body
+		
+		//Keep reading until the end of the body is reached
 		while(bufferIndex < endOfRecords) {
 			
-			/*if (!usesFileInputStream && isEndOfInputStream()) { //Condition if file is on Internet
-				break;
-			}*/
-			
-			//Keep reading until the end of the body is reached
 			Object[] row = new Object[numFields];
 			
 			//Check for record separator byte if required
@@ -506,7 +501,6 @@ public class QvxBinaryReader {
 						byte nullFlag = readBytesFromBuffer(1)[0];
 						if (nullFlag == 0) {
 							row[i] = readValueFromBuffer(fieldHeader);
-							//System.out.println("value: " + row[i]);
 						}else if (nullFlag == 1) { //Null flag of 1 means a field value is not used
 							row[i] = null;
 						}else {
@@ -516,15 +510,12 @@ public class QvxBinaryReader {
 						break;
 					case QVX_NULL_NEVER:
 						row[i] = readValueFromBuffer(fieldHeader);
-						//System.out.println("value: " + row[i]);
 						break;
 					default:
 						throw new RuntimeException("Unrecognized null representation: " + nullRepresentation);
 					}
 				} else { //QVX_QV_DUAL is used; readValueFromBuffer deals with the QvxQvSpecialFlag
 					row[i] = readValueFromBuffer(fieldHeader);
-					//System.out.println("column: is " + i + ": "+ row[i]);
-					//System.out.println("buffer index: is " + bufferIndex + ", buffer length is: " + buffer.length);
 				}
 			}
 			data.add(row);
@@ -540,15 +531,13 @@ public class QvxBinaryReader {
 	
 	private Object readValueFromBuffer(QvxFieldHeader fieldHeader) {
 		
-		//System.out.println("reading value from buffer...");
-		//System.out.println("reading from buffer index: " + bufferIndex);
 		int byteWidth = fieldHeader.getByteWidth().intValue();
 		ByteOrder byteOrder = fieldHeader.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
 		
 		switch (fieldHeader.getType()) {
 			case QVX_BLOB:
-				//TODO
-				return null;
+				throw new RuntimeException(
+					"Problem with input file: Qvx Reader does not support QvxFieldType: QVX_BLOB");
 			case QVX_IEEE_REAL:
 				if (byteWidth == 4) {
 					Float f = ByteBuffer.wrap(readBytesFromBuffer(4)).order(byteOrder).getFloat();
@@ -558,13 +547,11 @@ public class QvxBinaryReader {
 					return applyFieldAttr(d, fieldHeader);
 				}
 			case QVX_PACKED_BCD:
-				//TODO
-				return null;
+				throw new RuntimeException(	
+					"Problem with input file: Qvx Reader does not support QvxFieldType: QVX_PACKED_BCD");
 			case QVX_UNSIGNED_INTEGER:
 			case QVX_SIGNED_INTEGER:
-				if (byteWidth == 1) {
-					// TODO
-				}else if(byteWidth == 2) {
+				if(byteWidth == 2) {
 					short s = ByteBuffer.wrap(readBytesFromBuffer(2)).order(byteOrder).getShort();
 					return (short)applyFieldAttr(s, fieldHeader);
 				}else if(byteWidth == 4) {
@@ -591,24 +578,28 @@ public class QvxBinaryReader {
 	private Object readQvDualBytes(QvxFieldHeader fieldHeader) {
 		
 		byte flag = readBytesFromBuffer(1)[0];
-		if (flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_NULL.getValue()) {
+		if (flag == QVX_QV_SPECIAL_NULL.getValue()) {
 			return null;
 			
-		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_INT.getValue()) {
-			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+		}else if(flag == QVX_QV_SPECIAL_INT.getValue()) {
+			throw new RuntimeException(
+				"Problem with input file: Qvx Reader does not support QvxSpecialFlag: " +
+					QVX_QV_SPECIAL_INT.getValue());
 			
-		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE.getValue()){
+		}else if(flag == QVX_QV_SPECIAL_DOUBLE.getValue()){
 			ByteOrder byteOrder = fieldHeader.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
 			Object value = ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getDouble();
 			return applyFieldAttr(value, fieldHeader);
 			
-		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_STRING.getValue()) {
+		}else if(flag == QVX_QV_SPECIAL_STRING.getValue()) {
 			return applyFieldAttr(bufferToString_zeroTerminated(), fieldHeader);
 			
-		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_INT_AND_STRING.getValue()) {
-			throw new RuntimeException("Coding error: Unimplemented QvxQvSpecialFlag: " + flag);
+		}else if(flag == QVX_QV_SPECIAL_INT_AND_STRING.getValue()) {
+			throw new RuntimeException(
+					"Problem with input file: Qvx Reader does not support QvxSpecialFlag: " +
+						QVX_QV_SPECIAL_INT_AND_STRING.getValue());
 			
-		}else if(flag == QvxQvSpecialFlag.QVX_QV_SPECIAL_DOUBLE_AND_STRING.getValue()) {
+		}else if(flag == QVX_QV_SPECIAL_DOUBLE_AND_STRING.getValue()) {
 			readBytesFromBuffer(8); //Skip the "double" part of this value; it is not used
 			int oldBufferIndex = bufferIndex;
 			try {
@@ -651,6 +642,7 @@ public class QvxBinaryReader {
 	
 	private byte[] readBytesFromBuffer(int n) {
 		
+		// Read n bytes from buffer, and set bufferIndex to the index of the next data in the buffer
 		byte[] bytes = Arrays.copyOfRange(buffer, bufferIndex, bufferIndex + n);
 		bufferIndex += n;
 		
@@ -671,7 +663,6 @@ public class QvxBinaryReader {
 	private Object applyFieldAttr(Object data, QvxFieldHeader fieldHeader) {
 				
 		Object returnVal = null;
-		//Debugging code
 		QvxFieldType type = fieldHeader.getType();
 		
 		//If there is no formatting for this field, return the original data
@@ -718,11 +709,9 @@ public class QvxBinaryReader {
 							return null;
 						}
 					}catch(Exception e) {
-						System.out.println("Other exception");
 						e.printStackTrace();
 					}
 					
-					//System.out.println("Calendar: " + cal.getTime());
 					return cal;
 				}else {
 					System.out.println("WARNING: Unimplemented QvxFieldType-FieldAttrType combination: " +
@@ -743,9 +732,7 @@ public class QvxBinaryReader {
 			if (usesFixedPointDecimals(fieldHeader)) {
 				int fixPointDecimals = fieldHeader.getFixPointDecimals().intValue();
 				if (returnVal.getClass().equals(java.lang.Integer.class)) {
-					System.out.println("integer with fixed pt found");
 					double dReturnVal = Double.parseDouble(Integer.toString((int)returnVal));
-					System.out.println("converted to double");
 					return dReturnVal / Math.pow(10.0, fixPointDecimals);
 				}else if (returnVal.getClass().equals(java.lang.Double.class)) {
 					return (double)returnVal / Math.pow(10.0, fixPointDecimals);

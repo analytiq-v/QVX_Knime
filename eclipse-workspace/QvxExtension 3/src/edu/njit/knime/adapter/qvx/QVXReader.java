@@ -1,57 +1,28 @@
 package edu.njit.knime.adapter.qvx;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
-import java.util.Vector;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
 
-import org.apache.commons.io.IOUtils;
-import org.knime.base.node.io.filereader.ColProperty;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomain;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataType;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.LongCell;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.data.def.TimestampCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.data.def.IntCell;
 
-import edu.njit.knime.adapter.nodes.qvx.QvxDataCellFactory;
 import edu.njit.knime.adapter.qvx.QvxTableHeader.Fields.QvxFieldHeader;
 
 public class QVXReader {
 	private String filepath = null;
 	private QvxTableHeader qvxTableHeader = null;
-     private int numOfColumns;
-    private BufferedDataTable[] qvxTableData = null;
-    private QvxBinaryReader qvxBinaryReader = null;
+	private int numOfColumns;
+	private BufferedDataTable[] qvxTableData = null;
+	private QvxBinaryReader qvxBinaryReader = null;
 	
 	public QVXReader(String filepath, final ExecutionContext exec) throws JAXBException, IOException  {
 		this.filepath = filepath;
 	    
 	    qvxBinaryReader = new QvxBinaryReader();
-	    qvxTableData = qvxBinaryReader.readQvx(filepath, exec);
 	    
+	    qvxTableData = qvxBinaryReader.readQvx(filepath, exec);    
 	}
 	
 	public BufferedDataTable[] getTableData() {
