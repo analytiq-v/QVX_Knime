@@ -1,6 +1,5 @@
 package edu.njit.qvxwriter;
 
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
@@ -131,9 +130,7 @@ class AdvancedPanel extends JPanel {
 	}
 	
 	void loadValuesIntoPanel(final NodeSettingsRO settings) throws InvalidSettingsException {
-		
-		System.out.println("AdvancedPanel.loadValuesIntoPanel()");
-		
+				
 		boolean isBigEndian = false;
 		try {
 			isBigEndian = settings.getBoolean(QvxWriterNodeSettings.CFGKEY_IS_BIG_ENDIAN);
@@ -154,8 +151,6 @@ class AdvancedPanel extends JPanel {
 		}
 		
 		//usesRecordSeparator
-		recordSeparatorCheckBox.setSelected(usesRecordSeparator);
-		
-		System.out.println("AdvancedPanel done loading values");
+		recordSeparatorCheckBox.setSelected(usesRecordSeparator);		
 	}
 }
