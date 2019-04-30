@@ -48,25 +48,6 @@ public class QVXReader {
 	
 	public QVXReader(String filepath, final ExecutionContext exec) throws JAXBException, IOException  {
 		this.filepath = filepath;
-		//Read the qvx Header
-
-		JAXBContext context = JAXBContext.newInstance( QvxTableHeader.class );
-		Unmarshaller jaxbUnmarshaller = null;
-	    Reader reader = null;
-	    try {
-	        reader = new BufferedReader(new FileReader(filepath));
-	        XMLInputFactory xif = XMLInputFactory.newInstance();
-	        XMLEventReader xmlEventReader = xif.createXMLEventReader(reader);
-			jaxbUnmarshaller = context.createUnmarshaller();
-	        qvxTableHeader = (QvxTableHeader) jaxbUnmarshaller.unmarshal(new PartialXmlEventReader(xmlEventReader));
-	        
-	        
-
-	    } catch (XMLStreamException e) {
-			e.printStackTrace();
-		} finally {
-	        IOUtils.closeQuietly(reader);
-	    }
 	    
 	    qvxBinaryReader = new QvxBinaryReader();
 	    qvxTableData = qvxBinaryReader.readQvx(filepath, exec);
@@ -146,9 +127,4 @@ public class QVXReader {
 
 		return objs;		
 	}
-	
-		
-	 public static void main(String[] args) {
-
-	 }
 }
