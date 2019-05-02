@@ -14,6 +14,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 
 import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_FILE_NAME;
 import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_OVERWRITE_POLICY;
@@ -43,10 +44,16 @@ public class QvxWriterNodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+            final ExecutionContext exec) throws InvalidSettingsException {
     	
-    	writeQvxFile(inData[0]);
-    	return null;
+    	if (!m_settings.getFileName().equals("")) {
+    		/*A non-empty file name also implies that every other value in settings is non-empty
+    		(which implies that the writeQvxFile has all the necessary settings configured)*/
+    		writeQvxFile(inData[0]);
+    		return null;
+    	}else {
+    		throw new InvalidSettingsException("Node has not been configured");
+    	}
     }
     
     protected void writeQvxFile(final BufferedDataTable table) {
@@ -71,6 +78,9 @@ public class QvxWriterNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
 
+    	if (m_settings.getFileName().equals("")) {
+            throw new InvalidSettingsException("No settings available");
+        }
         return new DataTableSpec[]{null};
     }
 
@@ -79,7 +89,7 @@ public class QvxWriterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-
+    	
         m_settings.saveSettingsTo(settings);
     }
 
@@ -127,16 +137,21 @@ public class QvxWriterNodeModel extends NodeModel {
     	
     	String fileName = settings.getString(CFGKEY_FILE_NAME);
     	String overwritePolicy = settings.getString(CFGKEY_OVERWRITE_POLICY);
+    	boolean overwriteFile = overwritePolicy.contentEquals(OverwritePolicy.OVERWRITE.toString());
     	
     	File file = new File(fileName);
     	if (file.isDirectory()) {
     		throw new InvalidSettingsException("The provided file name is a directory");
     	}
+    	
     	if(file.exists()) {
     		if(overwritePolicy.equals(OverwritePolicy.ABORT.toString())) {
     			throw new InvalidSettingsException("File already exists");
     		}
     	}
+    	
+    	CheckUtils.checkDestinationFile(fileName, overwriteFile);
+    	
     	if(!fileName.endsWith(".qvx")) {
     		throw new InvalidSettingsException("Invalid file extension: \".qvx\" expected");
     	}

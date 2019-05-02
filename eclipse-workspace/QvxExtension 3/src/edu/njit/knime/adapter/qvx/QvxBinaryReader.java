@@ -15,9 +15,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -65,6 +62,7 @@ import static edu.njit.knime.adapter.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_NULL;
 import static edu.njit.knime.adapter.qvx.QvxQvSpecialFlag.QVX_QV_SPECIAL_STRING;
 import static edu.njit.knime.adapter.nodes.qvx.Util.getDateFromQvxReal;
 import static edu.njit.knime.adapter.nodes.qvx.Util.getDateFromString;
+import static edu.njit.knime.adapter.nodes.qvx.Util.getTimeFromString;
 import static edu.njit.knime.adapter.nodes.qvx.Util.objectToString;
 
 public class QvxBinaryReader {
@@ -109,21 +107,14 @@ public class QvxBinaryReader {
 	
 	private boolean attemptConversionToDateOrTime(int column) {
 		
-		return attemptConversionToDate(column) || attemptConversionToTime(column);
+		return attemptConvertColumnToDate(column) || attemptConvertColumnToTime(column);
 	}
 		
-	private boolean attemptConversionToDate(int column) {
+	private boolean attemptConvertColumnToDate(int column) {
 		
 		/* If every non-null item in data[:,column] can be converted into a Calendar date, do the
 		 * conversions and return true. Otherwise, return false, without doing any of the conversions.
 		 */
-		
-		String dateSeps = "-/";
-		String formatA = "^[0-9]{1,2}[" + dateSeps + "][0-9]{1,2}[" + dateSeps + "][0-9]{4}$";
-		String formatB = "^[0-9]{4}[" + dateSeps + "][0-9]{1,2}[" + dateSeps + "][0-9]{1,2}$";
-		
-		Pattern patternA = Pattern.compile(formatA);
-		Pattern patternB = Pattern.compile(formatB);
 		
 		Calendar[] calendars = new Calendar[data.size()];
 		for(int i = 0; i < data.size(); i++) {
@@ -136,42 +127,15 @@ public class QvxBinaryReader {
 			String s = null;
 			if (dataPt.getClass() == java.lang.String.class) {
 				s = (String)dataPt;
+				calendars[i] = getDateFromString(s);
 			}else{
 				return false;
 			}
 			
-			Matcher matcherA = patternA.matcher(s);
-			Matcher matcherB = patternB.matcher(s);
-			boolean matchA = matcherA.find();
-			boolean matchB = matcherB.find();
-			
-			if (matchA || matchB) {
-				//If one of the date formats is matched by the current string, create a new Calendar
-				
-				int month = 0;
-				int dayOfMonth = 0;
-				int year = 0;
-				if (matchA) {
-					String sep = "" + s.charAt(2);
-					String[] dateParts = s.split(sep);
-					month = Integer.parseInt(dateParts[0]) - 1;
-					dayOfMonth = Integer.parseInt(dateParts[1]);
-					year = Integer.parseInt(dateParts[2]);
-				}else if (matchB) {
-					String sep = "" + s.charAt(4);
-					String[] dateParts = s.split(sep);
-					year = Integer.parseInt(dateParts[0]);
-					month = Integer.parseInt(dateParts[1]) - 1;
-					dayOfMonth = Integer.parseInt(dateParts[2]);
-				}
-				calendars[i] = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
-				calendars[i].set(Calendar.DAY_OF_MONTH, dayOfMonth);
-				calendars[i].set(Calendar.MONTH, month);
-				calendars[i].set(Calendar.YEAR, year);
-			}else { //If none of the date formats is matched
+			if (calendars[i] == null) {
 				return false;
 			}
-		}
+		}	
 		
 		/*If the program gets to this point, it means that all data points could be successfully converted
 		 * to Calendars. Therefore, assign all of the data points a Calendar value
@@ -184,17 +148,11 @@ public class QvxBinaryReader {
 		return true;
 	}
 		
-	private boolean attemptConversionToTime(int column) {
+	private boolean attemptConvertColumnToTime(int column) {
 		
 		/* If every non-null item in data[:,column] can be converted into a Calendar time, do the
 		 * conversions and return true. Otherwise, return false, without doing any of the conversions.
 		 */
-		
-		String formatA = "^[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}$";
-		String formatB = "^[0-9]{1,2}:[0-9]{1,2}$";
-		
-		Pattern patternA = Pattern.compile(formatA);
-		Pattern patternB = Pattern.compile(formatB);
 		
 		Calendar[] calendars = new Calendar[data.size()];
 		for(int i = 0; i < data.size(); i++) {
@@ -207,34 +165,12 @@ public class QvxBinaryReader {
 			String s = null;
 			if (dataPt.getClass() == java.lang.String.class) {
 				s = (String)dataPt;
+				calendars[i] = getTimeFromString(s);
 			}else{
 				return false;
 			}
 			
-			Matcher matcherA = patternA.matcher(s);
-			Matcher matcherB = patternB.matcher(s);
-			boolean matchA = matcherA.find();
-			boolean matchB = matcherB.find();
-			
-			if (matchA || matchB) {
-				//If one of the time formats is matched by the current string, create a new Calendar
-				
-				String[] timeParts = s.split(":");
-				Integer hours = Integer.parseInt(timeParts[0]);
-				Integer minutes = Integer.parseInt(timeParts[1]);
-				Integer seconds = null;
-				if (matchA) {
-					seconds = Integer.parseInt(timeParts[2]);
-				}
-				
-				calendars[i] = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
-				calendars[i].set(Calendar.HOUR, hours);
-				calendars[i].set(Calendar.MINUTE, minutes);
-				if (seconds != null) {
-					calendars[i].set(Calendar.SECOND, seconds);
-				}
-				calendars[i].set(Calendar.MILLISECOND, 0);
-			}else { //If none of the date formats is matched
+			if (calendars[i] == null) {
 				return false;
 			}
 		}
@@ -701,7 +637,7 @@ public class QvxBinaryReader {
 					Calendar cal = null;
 					try {
 						//It is expected that value is a double that represents days since 1900
-						cal = getDateFromQvxReal((double)data); 
+						cal = getDateFromQvxReal((double)data);
 					}catch(ClassCastException e1) {
 						try {
 							cal = getDateFromString((String)data);
@@ -747,20 +683,29 @@ public class QvxBinaryReader {
 		return fixPointDecimals != null && fixPointDecimals.intValue() != 0;
 	}
 	
-	private DateAndTimeCell getCorrectDateAndTimeCell(
+	private DataCell getCorrectDateAndTimeCell(
 		Calendar cal, FieldAttrType fieldAttrType, int column)
 	{
 		
 		if (fieldAttrType.equals(DATE) || (fieldUsesDate[column] != null && fieldUsesDate[column])) {
-			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
+			if (cal.get(Calendar.YEAR) < 1900) { // Dates less than 1900 are not supported by this class
+				return new MissingCell("");
+			}else {
+				return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
 					cal.get(Calendar.DAY_OF_MONTH));
+			}
 		}else if (fieldAttrType.equals(TIMESTAMP)) {
-			return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
-					cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
+			if (cal.get(Calendar.YEAR) < 1900) { // Dates less than 1900 are not supported by this class
+				return new DateAndTimeCell(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE),
 					cal.get(Calendar.SECOND), cal.get(Calendar.MILLISECOND));
+			}else {
+				return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
+					cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE),
+					cal.get(Calendar.SECOND), cal.get(Calendar.MILLISECOND));
+			}
 		}else if (fieldAttrType.equals(INTERVAL) || fieldAttrType.equals(TIME)
 					|| (fieldUsesDate[column] != null  && !fieldUsesDate[column])) {
-			return new DateAndTimeCell(cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE),
+			return new DateAndTimeCell(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE),
 					cal.get(Calendar.SECOND), cal.get(Calendar.MILLISECOND));
 		}else {
 			throw new RuntimeException("Unimplemented field attribute type: " + fieldAttrType);

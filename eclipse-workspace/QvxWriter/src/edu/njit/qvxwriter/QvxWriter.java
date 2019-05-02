@@ -116,6 +116,10 @@ public class QvxWriter {
 			
 			setFieldAttributes(qvxFieldHeader, i);
 			
+			if (qvxFieldHeader.getType() == QVX_QV_DUAL) {
+				qvxFieldHeader.setBigEndian(false); //Only writes dates/times, which should be little-endian
+			}
+			
 			fields.getQvxFieldHeader().add(qvxFieldHeader);
 		}
 		tableHeader.setFields(fields);		
@@ -292,7 +296,7 @@ public class QvxWriter {
 				datePart = sDate;
 			}
 		}
-				
+		
 		switch (fieldAttrType) {
 		case DATE:
 			if (datePart != null)

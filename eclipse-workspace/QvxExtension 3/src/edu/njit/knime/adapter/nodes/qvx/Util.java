@@ -5,8 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-
-import org.knime.core.data.def.TimestampCell;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Util {
 	
@@ -20,7 +20,7 @@ public class Util {
 		nullCalendar.set(Calendar.MONTH, 0);
 		nullCalendar.set(Calendar.DAY_OF_MONTH, 1);
 		nullCalendar.set(Calendar.YEAR, 0);
-		nullCalendar.set(Calendar.HOUR, 0);
+		nullCalendar.set(Calendar.HOUR_OF_DAY, 0);
 		nullCalendar.set(Calendar.MINUTE, 0);
 		nullCalendar.set(Calendar.SECOND, 0);
 		dateFormat.setTimeZone(TimeZone.getTimeZone("EDT"));
@@ -51,87 +51,59 @@ public class Util {
 		return returnValue;
 	}
 	
-	public static Calendar getDateFromString(String dateTimeString) {
+	public static Calendar getDateFromString(String s) {
 		
-		System.out.println("Getting date from string: " + dateTimeString);
-		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
-		String[] dateTimeSplit = dateTimeString.split("");
+		//If s can be converted to a Calendar format, return that calendar. Otherwise, return null.
 		
-		String date = null;
-		String time = null;
-		Integer ampm = null;
+		String dateSeps = "-/";
+		String formatA = "^[0-9]{1,2}[" + dateSeps + "][0-9]{1,2}[" + dateSeps + "][0-9]{4}$";
+		String formatB = "^[0-9]{4}[" + dateSeps + "][0-9]{1,2}[" + dateSeps + "][0-9]{1,2}$";
+		String formatC = "^[0-9]{1,2}[" + dateSeps + "][0-9]{1,2}[" + dateSeps + "][0-9]{1,3}$";
 		
-		for(int i = 0; i < dateTimeSplit.length; i++) {
-			String part = dateTimeSplit[i];
-			if (part.contains("/")) { //Date
-				date = part;
-			}else if(part.contains(":")){ //Time
-				time = part;
-			}else if(part.toLowerCase().equals("AM")) {
-				ampm = Calendar.AM;
-			}else if(part.toUpperCase().equals("PM")) {
-				ampm = Calendar.PM;
-			}else {
-				return (Calendar)nullCalendar.clone();
-			}
-		}
+		Pattern patternA = Pattern.compile(formatA);
+		Pattern patternB = Pattern.compile(formatB);
+		Pattern patternC = Pattern.compile(formatC);
 		
-		//Valid date formats include MM/DD/YYYY and YYYY/MM/DD		
-		Integer month = null;
-		Integer dayOfMonth = null;
-		Integer year = null;
-		if (date != null) {
-			String[] dateParts = date.split("/");
-			for (int i = 0; i < dateParts.length; i++) {
-				String s = dateParts[i].replace(" ", "");
-				if (dateParts[i].length() == 1 || dateParts[i].length() == 2) {
-					if (month == null) {
-						month = Integer.parseInt(dateParts[i]);
-					}else if (dayOfMonth == null){
-						dayOfMonth = Integer.parseInt(dateParts[i]);
-					}else if (year == null) {
-						year = Integer.parseInt(dateParts[i]);
-					}else {
-						return (Calendar)nullCalendar.clone();
-					}
-				}else {
-					year = Integer.parseInt(dateParts[i]);
+		Matcher matcherA = patternA.matcher(s);
+		Matcher matcherB = patternB.matcher(s);
+		Matcher matcherC = patternC.matcher(s);
+		boolean matchA = matcherA.find();
+		boolean matchB = matcherB.find();
+		boolean matchC = matcherC.find();
+		
+		if (matchA || matchB || matchC) {
+			//If one of the date formats is matched by the current string, create a new Calendar
+			
+			//Find separator
+			String sep = "";
+			for(int i = 0; i < s.length(); i++) {
+				if (dateSeps.contains("" + s.charAt(i))) {
+					sep += s.charAt(i);
+					break;
 				}
 			}
-		}
-		
-		if (month == null || dayOfMonth == null || year == null) {
-			return (Calendar)nullCalendar.clone();
-		}else {
-			cal.set(Calendar.MONTH, month);
-			cal.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-			cal.set(Calendar.YEAR, year);
-		}
-		
-		//Time
-		if (time != null) {
-			String[] timeParts = time.split(":");
-			Integer hours = Integer.parseInt(timeParts[0]);
-			Integer minutes = Integer.parseInt(timeParts[1]);
-			Integer seconds = 0;
-			try {
-				seconds = Integer.parseInt(timeParts[2]);
-			}catch(IndexOutOfBoundsException e) { //If only minutes and hours are specified
-				seconds = 0;
-			}
 			
-			cal.set(Calendar.HOUR, hours);
-			cal.set(Calendar.MINUTE, minutes);
-			cal.set(Calendar.SECOND, seconds);
+			String[] dateParts = s.split(sep);
+			int month = 0;
+			int dayOfMonth = 0;
+			int year = 0;
+			if (matchA || matchC) {
+				month = Integer.parseInt(dateParts[0]) - 1;
+				dayOfMonth = Integer.parseInt(dateParts[1]);
+				year = Integer.parseInt(dateParts[2]);
+			}else if (matchB) {
+				year = Integer.parseInt(dateParts[0]);
+				month = Integer.parseInt(dateParts[1]) - 1;
+				dayOfMonth = Integer.parseInt(dateParts[2]);
+			}
+			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
+			cal.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+			cal.set(Calendar.MONTH, month);
+			cal.set(Calendar.YEAR, year);
+			return cal;
+		}else { //If none of the date formats is matched
+			return null;
 		}
-		
-		//AM / PM
-		if (ampm != null) {
-			cal.set(Calendar.AM_PM, ampm);
-		}
-		
-		System.out.println("VALID Calendar");
-		return cal;
 	}
 	
 	public static Calendar getDateFromQvxReal(double daysSince) {
@@ -146,9 +118,48 @@ public class Util {
 		
 		Date date = new Date(dateInMilliseconds);
 		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
-		cal.setTime(date);		
+		cal.setTime(date);
 		
-		return resolveDateOffset(cal);
+		return cal;
+	}
+	
+	public static Calendar getTimeFromString(String s) {
+		
+		//If s can be converted to a Calendar format, return that calendar. Otherwise, return null.
+
+		String formatA = "^[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}$";
+		String formatB = "^[0-9]{1,2}:[0-9]{1,2}$";
+		
+		Pattern patternA = Pattern.compile(formatA);
+		Pattern patternB = Pattern.compile(formatB);
+		
+		Matcher matcherA = patternA.matcher(s);
+		Matcher matcherB = patternB.matcher(s);
+		boolean matchA = matcherA.find();
+		boolean matchB = matcherB.find();
+		
+		if (matchA || matchB) {
+			//If one of the time formats is matched by the current string, create a new Calendar
+			
+			String[] timeParts = s.split(":");
+			Integer hours = Integer.parseInt(timeParts[0]);
+			Integer minutes = Integer.parseInt(timeParts[1]);
+			Integer seconds = null;
+			if (matchA) {
+				seconds = Integer.parseInt(timeParts[2]);
+			}
+			
+			Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
+			cal.set(Calendar.HOUR_OF_DAY, hours);
+			cal.set(Calendar.MINUTE, minutes);
+			if (seconds != null) {
+				cal.set(Calendar.SECOND, seconds);
+			}
+			cal.set(Calendar.MILLISECOND, 0);
+			return cal;
+		}else { //If none of the time formats is matched
+			return null;
+		}
 	}
 	
 	public static String objectToString(Object obj) {
@@ -168,20 +179,6 @@ public class Util {
 		}else {
 			return s;
 		}
-	}
-	
-	public static Calendar resolveDateOffset(Calendar cal) {
-		
-		int year = cal.get(Calendar.YEAR);
-		int month = cal.get(Calendar.MONTH);
-		int dayOfMonth= cal.get(Calendar.DAY_OF_MONTH);
-		
-		if (year <= 1900 && ((month == 0) || (month == 1 && dayOfMonth < 28))) {
-			//If the date is before February 28, 1900, the calendar will be off by one day
-			cal.set(Calendar.DAY_OF_MONTH, dayOfMonth + 1);
-		}
-		
-		return cal;
 	}
 	
 	public static String toTitleCase(String s) {
