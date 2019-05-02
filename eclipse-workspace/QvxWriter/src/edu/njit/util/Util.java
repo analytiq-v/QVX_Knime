@@ -55,6 +55,7 @@ public class Util {
 		cal.set(Calendar.MONTH, month);
 		cal.set(Calendar.DAY_OF_MONTH, dayOfMonth);
 		cal.set(Calendar.YEAR, year);
+		resolveDateOffset(cal);
 				
 		return (cal.getTimeInMillis() + EPOCH.getTime() - START_DATE.getTime())/MILLISECONDS_PER_DAY;
 	}
@@ -81,6 +82,17 @@ public class Util {
 		}else {
 			return s;
 		}
+	}
+	
+	public static void resolveDateOffset(Calendar cal) {
+		
+		int year = cal.get(Calendar.YEAR);
+		int dayOfMonth= cal.get(Calendar.DAY_OF_MONTH);
+		
+		if (year < 1900 && year > 1) {
+			//If the date is before 1900, the calendar will be off by one day
+			cal.set(Calendar.DAY_OF_MONTH, dayOfMonth - 1);
+		}		
 	}
 	
 	public static String toTitleCase(String s) {
