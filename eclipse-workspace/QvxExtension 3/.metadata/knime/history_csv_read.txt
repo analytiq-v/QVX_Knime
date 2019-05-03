@@ -1,3 +1,0 @@
-/Users/bsangam/Downloads/capstone-project-master/nysedata.csv
-/Users/bsangam/eclipse-workspace/QvxExtension/Customer.csv
-/Users/bsangam/eclipse-workspace/test/nysedata.csv

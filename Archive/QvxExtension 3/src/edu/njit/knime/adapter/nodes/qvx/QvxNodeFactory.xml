@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./default.png" type="Source" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>Qvx Reader</name>
+    
+    <shortDescription>
+        Reads different QVX file formats and converts them into a readable table format with a two-dimensional array
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        	<p>
+        	Reads qvx files from local file system or online. Upon execution, the node will read the table header information
+		  	and output the data into a KNIME data table.
+			</p>
+        </intro>
+        
+        <option name="Output Location">
+        	Enter the file location or the url path of the qvx file to read it into the workflow
+        </option>
+    </fullDescription>
+    
+    <ports>
+		<outPort index="0" name="File Table">
+		KNIME table reads different field attributes from a .qvx file.
+		</outPort>
+	</ports>    
+</knimeNode>

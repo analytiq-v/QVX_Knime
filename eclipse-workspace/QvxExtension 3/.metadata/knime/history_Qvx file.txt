@@ -1,8 +1,0 @@
-/Users/monicasangam/git/capstone-project/eclipse-workspace/test-files/Products.qvx
-/Users/monicasangam/git/capstone-project/eclipse-workspace/test-files/DateTime.qvx
-/Users/monicasangam/git/capstone-project/eclipse-workspace/test-files/Customer.qvx
-/Users/bsangam/eclipse-workspace/QvxExtension/docs/Customer.qvx
-/Users/bsangam/eclipse-workspace/QvxExtension/docs/products.qvx
-/Users/bsangam/eclipse-workspace/QvxExtension/docs/Feedback.qvx
-/Users/bsangam/eclipse-workspace/QvxExtension/docs/job.qvx
-/Users/bsangam/eclipse-workspace/QvxExtension/docs/qvx3.qvx
