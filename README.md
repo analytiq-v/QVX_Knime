@@ -7,7 +7,7 @@ QvxReader: KNIME node that allows the user to select a qvx input file. On execut
 QvxWriter: KNIME node that allows the user to select a qvx output file. The input port accepts a BufferedDataTable, and on execution, a qvx file is generated from this BufferedDataTable.
 
 Running the project in KNIME:
-Copy the 2 jar files from the "plugins" folder into  the "plugins" directory of the KNIME installation. Note: This project is compatible with the most recent version of KNIME (3.7.2), but it is not compatible with previous versions.
+Copy the 2 jar files from the "plugins" folder into  the "plugins" directory of the KNIME installation. Note: This project is compatible with KNIME 3.7.x.
 
 Running the projects in Eclipse:
 Before running the projects, you must set up the KNIME Analytics SDK. Instructions are found here:
