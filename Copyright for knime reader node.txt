@@ -1,0 +1,15 @@
+Original QVX Reader node copyright notice:
+
+This QVX reader node module was originally developed by Monica Sangam 
+and have full rights to use this software module for his/her own purpose
+assign or donate this software module to any third party and to inhibit
+third parties from using this software module for Analytiq conforming
+products. This copyright notice must be included in all copies or
+derivative works of this QVX Reader node module.
+
+Copyright (c) 2019 Monica Sangam.
+
+Manifest-Version: 1.0
+Created-By: 1.8.0 (Java Corporation)
+Name: Master Capstone Project/QVX Reader Node/
+Sealed: true
